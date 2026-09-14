@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Login | VConnectLive</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap 4.6 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,200;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .header__logo {
+            margin-bottom: 10px;
+        }
+
+        .header__logo a {
+            color: #ff9800;
+            font-weight: bold;
+            letter-spacing: -2px;
+            font-size: 40px;
+            text-decoration: none;
+        }
+
+        .header__logo a:hover {
+            text-decoration: none;
+            color: #e68a00;
+        }
+
+        .login-box {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 40px 50px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-title {
+            font-size: 30px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .form-control {
+            border-radius: 4px;
+            height: 44px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            height: 46px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+
+        .test-helper-bar {
+            background: #e9ecef;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .test-helper-title {
+            font-weight: 700;
+            color: #495057;
+            margin-right: 8px;
+        }
+
+        .btn-preset {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #ced4da;
+            background: #fff;
+            color: #495057;
+            transition: all 0.15s;
+        }
+
+        .btn-preset:hover {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+
+        .api-inspector {
+            margin-top: 24px;
+            background: #1e293b;
+            color: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            display: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .api-inspector pre {
+            color: #e2e8f0;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .badge-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="py-5">
+    <div class="container">
+        <div style="max-width: 720px; margin: 0 auto;">
+            
+            <!-- Exact Logo from login.jsp -->
+            <div class="header__logo text-center text-sm-left">
+                <a href="javascript:void(0)">
+                    VCONNECT <span style="font-weight: 200; color: #38bdf8; font-style: italic">live</span>
+                </a>
+            </div>
+
+            <!-- Quick-fill scenario bar for testing -->
+            <div class="test-helper-bar">
+                <span class="test-helper-title">Quick-Fill Test Accounts:</span>
+                <button type="button" class="btn-preset" onclick="fillForm('testuser@wejoinlife.com', 'Test@123456', true)">
+                    🟢 Verified (Status 0)
+                </button>
+                <button type="button" class="btn-preset" onclick="fillForm('testuser@wejoinlife.com', 'WrongPass', true)">
+                    🟡 Wrong Pass (Status 200)
+                </button>
+                <button type="button" class="btn-preset" onclick="fillForm('u@u.com', 'password123', true)">
+                    🟠 Unverified (Status 100)
+                </button>
+                <button type="button" class="btn-preset" onclick="fillForm('notfound@wejoinlife.com', '123456', false)">
+                    🔴 Not Found (Status 300)
+                </button>
+            </div>
+
+            <!-- Exact Main Card Structure from login.jsp -->
+            <div class="login-box">
+                <form id="myfrm" method="post" novalidate class="needs-validation">
+                    <h1 class="login-title">Login</h1>
+                    
+                    <!-- Alert Messages matching login.jsp ids -->
+                    <div class="alert alert-success" id="succdiv" role="alert" style="display:none"></div>
+                    <div class="alert alert-danger" id="errdiv" role="alert" style="display:none"></div>
+                    
+                    <!-- Email Field -->
+                    <div class="form-group">
+                        <label for="email" class="control-label"><span style="color:red">*</span> Email</label>										
+                        <div>
+                            <input class="form-control" type="email" id="email" value="testuser@wejoinlife.com" maxlength="75" required autofocus placeholder="Enter your email"/>
+                            <div class="invalid-feedback">Enter your registered email</div>						
+                        </div>				
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="form-group">
+                        <label for="password" class="control-label"><span style="color:red">*</span> Password</label>
+                        <div>
+                            <input class="form-control" type="password" id="password" value="Test@123456" maxlength="75" required placeholder="Enter password"/>
+                            <div class="invalid-feedback">Enter password</div>						
+                        </div>					
+                    </div>
+                    
+                    <!-- Remember Me Checkbox -->
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input class="custom-control-input" type="checkbox" value="1" name="rememberme" id="rememberme" checked>
+                            <label class="custom-control-label" for="rememberme">Remember me</label>
+                        </div>				
+                    </div>
+                    
+                    <!-- Links from login.jsp -->
+                    <div class="form-group mb-2">
+                        <a href="javascript:alert('Forgot password module');">Forgot Password?</a>
+                    </div>
+                    <div class="form-group mb-4">
+                        <a href="javascript:alert('Signup module');">Register here</a>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="button" class="btn btn-primary btn-block" id="submitbtn">
+                        <span class="spinner-border spinner-border-sm mr-2" id="spinner" style="display:none;" role="status"></span>
+                        <span id="btntext">Submit</span>
+                    </button>
+                </form>
+
+                <!-- API Response & JWT Inspector -->
+                <div class="api-inspector" id="inspectorBox">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary">
+                        <span class="font-weight-bold text-white">API Response Details</span>
+                        <span class="badge badge-success badge-status" id="statusBadge">Status: 0</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Raw Response from Spring Boot API:</small>
+                        <pre id="rawResponse">// JSON response</pre>
+                    </div>
+                    <div class="mb-2" id="jwtSection" style="display:none;">
+                        <small class="text-muted d-block">Decoded JWT Token Claims:</small>
+                        <pre id="jwtPayload">// JWT claims</pre>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Active Cookies (document.cookie):</small>
+                        <pre id="cookieOutput">// Cookies</pre>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.port === '8080' ? '' : 'http://localhost:8080';
+
+        function fillForm(email, password, remember) {
+            $('#email').val(email);
+            $('#password').val(password);
+            $('#rememberme').prop('checked', remember);
+            $('#errdiv').hide().html('');
+            $('#succdiv').hide().html('');
+            $('#inspectorBox').hide();
+        }
+
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        $(document).ready(function() {
+            $("#submitbtn").click(function() {
+                $("#succdiv").hide().html("");
+                $("#errdiv").hide().html("");
+                $("#inspectorBox").hide();
+
+                var $form = $("#myfrm");
+
+                if ($form[0].checkValidity() === false) {
+                    $form.addClass('was-validated');
+                    return false;
+                }
+
+                $("#submitbtn").prop('disabled', true);
+                $("#spinner").show();
+                $("#btntext").text("Submitting...");
+
+                var isRemember = $("#rememberme").is(':checked');
+
+                $.ajax({
+                    url: API_BASE + '/api/v1/auth/login',
+                    type: "POST",
+                    contentType: "application/json",
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    data: JSON.stringify({
+                        email: $("#email").val().trim(),
+                        password: $("#password").val(),
+                        rememberMe: isRemember,
+                        rememberme: isRemember ? "1" : "0"
+                    }),
+                    dataType: 'json',
+                    success: function(resp) {
+                        $("#inspectorBox").show();
+                        $("#rawResponse").text(JSON.stringify(resp, null, 2));
+                        $("#cookieOutput").text(document.cookie || '(Cookies set via HTTP Set-Cookie header)');
+
+                        if (resp.status > 0) {
+                            $("#statusBadge").attr('class', 'badge badge-warning badge-status').text('Status: ' + resp.status);
+                            if (resp.status === 300) {
+                                $("#statusBadge").attr('class', 'badge badge-danger badge-status');
+                            }
+
+                            if (resp.gotoUrl) {
+                                $("#errdiv").html(resp.msg + " <br><small>Redirect URL: " + resp.gotoUrl + "</small>").show();
+                            } else {
+                                $("#errdiv").html(resp.msg).show();
+                            }
+                            $("#jwtSection").hide();
+                        } else {
+                            // Status 0: Success
+                            $("#statusBadge").attr('class', 'badge badge-success badge-status').text('Status: 0 (SUCCESS)');
+                            $("#succdiv").html("<strong>Login successful!</strong> Signed in as <code>" + resp.email + "</code> with role <strong>" + resp.role + "</strong>.").show();
+
+                            if (resp.accessToken) {
+                                localStorage.setItem('accessToken', resp.accessToken);
+                                const claims = parseJwt(resp.accessToken);
+                                if (claims) {
+                                    $("#jwtPayload").text(JSON.stringify(claims, null, 2));
+                                    $("#jwtSection").show();
+                                }
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $("#errdiv").html("<strong>Request Error (" + xhr.status + "):</strong> " + (xhr.responseText || error)).show();
+                        $("#statusBadge").attr('class', 'badge badge-danger badge-status').text('HTTP ' + xhr.status);
+                        $("#inspectorBox").show();
+                        $("#rawResponse").text(xhr.responseText || error);
+                    },
+                    complete: function() {
+                        $("#submitbtn").prop('disabled', false);
+                        $("#spinner").hide();
+                        $("#btntext").text("Submit");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

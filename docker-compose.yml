@@ -1,36 +1,11 @@
-﻿version: '3.8'
-
 services:
-  database:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: wejoinlife
-      MYSQL_ROOT_PASSWORD: rootpassword
-    ports:
-      - 3306:3306
-    volumes:
-      - mysql_data:/var/lib/mysql
-
   backend:
     build:
       context: ./backend
-    ports:
-      - 8080:8080
+    network_mode: "host"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/wejoinlife?useSSL=false&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/vconnect_prod_portal?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: devdb
+      SPRING_DATASOURCE_PASSWORD: ""
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-    depends_on:
-      - database
-
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - 3000:3000
-    depends_on:
-      - backend
-
-volumes:
-  mysql_data:
+      PORTAL_DB: vconnect_prod_portal

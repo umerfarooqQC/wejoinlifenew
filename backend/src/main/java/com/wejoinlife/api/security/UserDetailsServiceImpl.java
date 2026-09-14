@@ -17,20 +17,21 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final JdbcClient jdbcClient;
 
-    private record UserRecord(String id, String email, String passwordHash, String role) {}
+    @org.springframework.beans.factory.annotation.Value("${application.database.portal-db:vconnect_prod_portal}")
+    private String portalDb;
+
+    private record ClientRecord(String id, String email, String pass, String isSuperUser) {}
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String sql = "SELECT id, email, password_hash, role FROM users WHERE email = :username OR phone = :username";
-        return jdbcClient.sql(sql)
+        String clientSql = "SELECT id, email, pass, is_super_user AS isSuperUser FROM " + portalDb + ".clients WHERE site_id = 0 AND email = :username";
+        ClientRecord c = jdbcClient.sql(clientSql)
                 .param("username", username)
-                .query(UserRecord.class)
+                .query(ClientRecord.class)
                 .optional()
-                .map(u -> new User(
-                        u.email(),
-                        u.passwordHash(),
-                        List.of(new SimpleGrantedAuthority("ROLE_" + u.role().toUpperCase()))
-                ))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        String role = "1".equals(c.isSuperUser()) ? "ROLE_ADMIN" : "ROLE_BUYER";
+        return new User(c.email(), c.pass(), List.of(new SimpleGrantedAuthority(role)));
     }
 }

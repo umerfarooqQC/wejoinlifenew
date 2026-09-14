@@ -38,14 +38,15 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>(extraClaims != null ? extraClaims : Map.of());
         String role = userDetails.getAuthorities().stream()
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
                 .orElse("ROLE_BUYER");
-        extraClaims.put("role", role);
+        claims.put("role", role);
 
         return Jwts.builder()
-                .claims(extraClaims)
+                .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
