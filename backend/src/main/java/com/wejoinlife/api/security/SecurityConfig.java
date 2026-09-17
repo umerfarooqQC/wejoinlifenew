@@ -3,10 +3,6 @@ package com.wejoinlife.api.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,7 +16,6 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -35,19 +30,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // 1. PUBLIC: Guest discovery & auth (NO LOGIN NEEDED)
-                .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
+                .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                
-                // 2. BUYER: Checkout, orders, addresses
-                .requestMatchers("/api/v1/buyer/**").hasRole("BUYER")
-                
-                // 3. SELLER: Inventory, sub-orders, wallet
-                .requestMatchers("/api/v1/seller/**").hasRole("SELLER")
-                
-                // 4. ADMIN: Platform configuration & approvals
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                
+                .requestMatchers("/api/v1/products/**", "/api/v1/adm/**").permitAll()
                 .anyRequest().authenticated()
             )
             // Error handling: Clean JSON responses
@@ -71,10 +56,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

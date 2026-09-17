@@ -1,4 +1,4 @@
-﻿server:
+server:
   port: 8080
 
 spring:
@@ -10,9 +10,10 @@ spring:
       enabled: true
 
   datasource:
-    url: jdbc:mysql://:/?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: 
-    password: 
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/vconnect_prod_portal?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:devdb}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   sql:
     init:
@@ -20,6 +21,15 @@ spring:
 
 application:
   security:
+    client-pass-salt: ${CLIENT_PASS_SALT:38fc4120}
     jwt:
-      secret-key: 
+      secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
       expiration: 86400000
+
+  database:
+    portal-db: ${PORTAL_DB:vconnect_prod_portal}
+    catalog-db: ${CATALOG_DB:vconnect_prod_catalog}
+    vconnect-db: ${VCONNECT_DB:vconnect}
+
+  cart:
+    cookie-name: ${CART_COOKIE_NAME:vconnect_cart}

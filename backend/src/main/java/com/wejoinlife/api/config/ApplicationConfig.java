@@ -14,10 +14,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+<<<<<<< HEAD
 import org.springframework.web.client.RestClient;
 
 import java.time.Clock;
 import java.util.List;
+=======
+>>>>>>> d9edeb77b1531d25f26164e8a0190c65d37f4aaf
 
 @Configuration
 @RequiredArgsConstructor
@@ -52,15 +55,5 @@ public class ApplicationConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public RestClient restClient() {
-        return RestClient.builder().build();
-    }
-
-    @Bean
-    public Clock clock() {
-        return Clock.systemUTC();
     }
 }

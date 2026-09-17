@@ -1,6 +1,8 @@
 package com.wejoinlife.api.security;
 
+import com.wejoinlife.api.repository.AuthRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -16,21 +18,27 @@ import java.util.List;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final JdbcClient jdbcClient;
+    private final AuthRepository authRepository;
 
-    private record UserRecord(String id, String email, String passwordHash, String role) {}
+    @Value("${application.database.portal-db:vconnect_prod_portal}")
+    private String portalDb;
+
+    private record ClientRecord(String id, String clientUuid, String email, String username, String pass, String isSuperUser) {}
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String sql = "SELECT id, email, password_hash, role FROM users WHERE email = :username OR phone = :username";
-        return jdbcClient.sql(sql)
+        String clientSql = "SELECT id, client_uuid AS clientUuid, email, username, pass, is_super_user AS isSuperUser " +
+                           "FROM " + portalDb + ".clients " +
+                           "WHERE is_active = 1 AND (email = :username OR username = :username) LIMIT 1";
+        ClientRecord c = jdbcClient.sql(clientSql)
                 .param("username", username)
-                .query(UserRecord.class)
+                .query(ClientRecord.class)
                 .optional()
-                .map(u -> new User(
-                        u.email(),
-                        u.passwordHash(),
-                        List.of(new SimpleGrantedAuthority("ROLE_" + u.role().toUpperCase()))
-                ))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        boolean isSeller = authRepository.isSeller(c.clientUuid());
+        String role = isSeller ? "seller" : "buyer";
+        String effectiveUsername = (c.email() != null && !c.email().isBlank()) ? c.email() : c.username();
+        return new User(effectiveUsername, c.pass(), List.of(new SimpleGrantedAuthority(role)));
     }
 }
