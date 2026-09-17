@@ -1,6 +1,9 @@
 package com.wejoinlife.api.dto.auth;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AuthResponse(
@@ -14,13 +17,17 @@ public record AuthResponse(
     String accessToken,
     String tokenType,
     String email,
-    String role
+    String role,
+    @JsonProperty("siteIds")
+    @JsonAlias({"site_ids"})
+    List<Integer> siteIds
 ) {
     public static AuthResponse success(
             String jwt,
             String cuid,
             String email,
             String role,
+            List<Integer> siteIds,
             boolean rememberMe,
             String token,
             String validator
@@ -36,7 +43,8 @@ public record AuthResponse(
                 jwt,
                 "Bearer",
                 email,
-                role
+                role,
+                siteIds
         );
     }
 
@@ -52,10 +60,8 @@ public record AuthResponse(
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
 }
-
-
-// #hello there

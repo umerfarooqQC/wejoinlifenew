@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 @Service
@@ -39,11 +41,13 @@ public class JwtService {
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>(extraClaims != null ? extraClaims : Map.of());
-        String role = userDetails.getAuthorities().stream()
-                .findFirst()
-                .map(GrantedAuthority::getAuthority)
-                .orElse("ROLE_BUYER");
-        claims.put("role", role);
+        if (!claims.containsKey("role")) {
+            String role = userDetails.getAuthorities().stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("buyer");
+            claims.put("role", role);
+        }
 
         return Jwts.builder()
                 .claims(claims)
@@ -63,7 +67,33 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
-    private Claims extractAllClaims(String token) {
+    public boolean isTokenExpired(Claims claims) {
+        return claims != null && claims.getExpiration() != null && claims.getExpiration().before(new Date());
+    }
+
+    public List<Integer> extractSiteIds(Claims claims) {
+        if (claims == null) {
+            return List.of();
+        }
+        Object siteIdsObj = claims.get("siteIds");
+        if (siteIdsObj instanceof List<?> list) {
+            return list.stream()
+                    .filter(Objects::nonNull)
+                    .map(item -> {
+                        if (item instanceof Number num) return num.intValue();
+                        try {
+                            return Integer.parseInt(item.toString());
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+        }
+        return List.of();
+    }
+
+    public Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()

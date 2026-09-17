@@ -32,6 +32,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/products/**", "/api/v1/adm/**").permitAll()
                 .anyRequest().authenticated()
             )
             // Error handling: Clean JSON responses

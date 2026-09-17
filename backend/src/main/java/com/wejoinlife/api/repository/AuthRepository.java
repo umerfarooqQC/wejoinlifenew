@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,18 +18,61 @@ public class AuthRepository {
     @Value("${application.database.portal-db:vconnect_prod_portal}")
     private String portalDb;
 
-    public Optional<ClientUser> findByEmail(String email) {
+    @Value("${application.database.vconnect-db:vconnect}")
+    private String vconnectDb;
+
+    public Optional<ClientUser> findByEmailOrUsername(String identifier) {
         String sql = "SELECT id, client_uuid AS clientUuid, email, pass, " +
                      "is_verified AS isVerified, is_super_user AS isSuperUser, " +
                      "client_profil_id AS clientProfilId " +
                      "FROM " + portalDb + ".clients " +
-                     "WHERE site_id = 0 AND email = :email";
+                     "WHERE is_active = 1 AND (email = :identifier OR username = :identifier) " +
+                     "LIMIT 1";
         return jdbcClient.sql(sql)
-                .param("email", email)
+                .param("identifier", identifier)
                 .query(ClientUser.class)
                 .optional();
     }
 
+    public Optional<ClientUser> findByEmail(String email) {
+        return findByEmailOrUsername(email);
+    }
+
+    public boolean isSeller(String clientUuid) {
+        if (clientUuid == null || clientUuid.isBlank()) {
+            return false;
+        }
+        String sql = "SELECT COUNT(*) FROM (" +
+                     "  SELECT id FROM " + vconnectDb + ".sellers WHERE client_uuid = :clientUuid " +
+                     "  UNION " +
+                     "  SELECT seller_id AS id FROM " + portalDb + ".clients_sellers WHERE client_uuid = :clientUuid " +
+                     ") t";
+        Integer count = jdbcClient.sql(sql)
+                .param("clientUuid", clientUuid)
+                .query(Integer.class)
+                .optional()
+                .orElse(0);
+        return count > 0;
+    }
+
+    public List<Integer> findSellerSiteIds(String clientUuid) {
+        if (clientUuid == null || clientUuid.isBlank()) {
+            return List.of();
+        }
+        String sql = "SELECT DISTINCT site_id FROM (" +
+                     "  SELECT s.site_id FROM " + vconnectDb + ".sellers s WHERE s.client_uuid = :clientUuid AND s.site_id IS NOT NULL AND s.site_id > 0 " +
+                     "  UNION " +
+                     "  SELECT st.id AS site_id FROM " + portalDb + ".sites st JOIN " + vconnectDb + ".sellers s ON s.id = st.seller_id WHERE s.client_uuid = :clientUuid " +
+                     "  UNION " +
+                     "  SELECT s.site_id FROM " + portalDb + ".clients_sellers cs JOIN " + vconnectDb + ".sellers s ON s.id = cs.seller_id WHERE cs.client_uuid = :clientUuid AND s.site_id IS NOT NULL AND s.site_id > 0 " +
+                     "  UNION " +
+                     "  SELECT st.id AS site_id FROM " + portalDb + ".clients_sellers cs JOIN " + portalDb + ".sites st ON st.seller_id = cs.seller_id WHERE cs.client_uuid = :clientUuid " +
+                     ") t WHERE site_id IS NOT NULL ORDER BY site_id";
+        return jdbcClient.sql(sql)
+                .param("clientUuid", clientUuid)
+                .query(Integer.class)
+                .list();
+    }
 
     public void updateLastLogin(String clientId) {
         String sql = "UPDATE " + portalDb + ".clients SET last_login_on = NOW() WHERE id = :id";
