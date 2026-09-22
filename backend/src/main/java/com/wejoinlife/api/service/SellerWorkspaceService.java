@@ -91,7 +91,6 @@ public class SellerWorkspaceService {
         return new SellerContext(clientUuid, allowedSiteIds);
     }
 
-    private int resolveSelectedSiteId(List<Integer> allowedSiteIds, String effectiveShopParam) {
     private int resolveSelectedSiteId(String clientUuid, List<Integer> allowedSiteIds, String effectiveShopParam) {
         if (effectiveShopParam != null && !effectiveShopParam.isBlank()) {
             int selectedSiteId;
@@ -128,7 +127,6 @@ public class SellerWorkspaceService {
                 ? requestedShopId.trim()
                 : (mcpSellerId != null && !mcpSellerId.isBlank() ? mcpSellerId.trim() : null);
 
-        int selectedSiteId = resolveSelectedSiteId(ctx.allowedSiteIds(), effectiveShopParam);
         int selectedSiteId = resolveSelectedSiteId(ctx.clientUuid(), ctx.allowedSiteIds(), effectiveShopParam);
 
         List<ShopRecord> shopRecords = sellerWorkspaceRepository.findShopsBySiteIds(ctx.allowedSiteIds());
@@ -164,7 +162,6 @@ public class SellerWorkspaceService {
                 ? requestedShopId.trim()
                 : (mcpSellerId != null && !mcpSellerId.isBlank() ? mcpSellerId.trim() : null);
 
-        int selectedSiteId = resolveSelectedSiteId(ctx.allowedSiteIds(), effectiveShopParam);
         int selectedSiteId = resolveSelectedSiteId(ctx.clientUuid(), ctx.allowedSiteIds(), effectiveShopParam);
 
         // 3. Retrieve shops and mark selected

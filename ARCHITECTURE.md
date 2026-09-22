@@ -13,6 +13,7 @@
 * **Backend:** Spring Boot 4.1.1 (Java 25 target).
 * **Database Access:** Spring Boot 3+ **`JdbcClient`** (Fluent SQL, named parameters, auto-mapping). **NO JPA / Hibernate.**
 * **Security:** Spring Security + JJWT (Bearer header only) + Bucket4j rate limiting + Jsoup XSS sanitization.
+* **Async & Concurrency:** Spring `@EnableAsync`, managed `ThreadPoolTaskExecutor`, and common `ExecutorService` / `ThreadPoolManager`. No unmanaged ad-hoc threads.
 * **Frontend:** Next.js 15 (App Router, TypeScript, Tailwind CSS, Shadcn UI).
 * **State Management:** **Zustand** (with `persist` middleware to `localStorage`) for the multi-shop guest cart.
 * **Database Note:** Connects to an **existing database**. `spring.sql.init.mode=never`. Do **NOT** run DDL table creation scripts unless instructed.
@@ -24,7 +25,7 @@
 ```text
 D:\work\wejoinlife/
 ├── backend/src/main/java/com/wejoinlife/api/
-│   ├── config/              # Infrastructure beans (@Configuration + @Bean): PasswordEncoder, RestClient, Clock
+│   ├── config/              # Infrastructure beans (@Configuration + @Bean): PasswordEncoder, ThreadPoolConfig, ThreadPoolManager, RestClient, Clock
 │   ├── controller/          # REST API endpoints ONLY (@RestController). NO business logic. NO SQL.
 │   │   ├── public/          # 100% Public endpoints (Products, Shops, Categories). NO LOGIN NEEDED.
 │   │   ├── buyer/           # Buyer endpoints (Cart, Checkout, Profile). Role: BUYER.
@@ -107,6 +108,10 @@ D:\work\wejoinlife/
 * **FORBIDDEN:** Turning public shop/product pages into pure client-side `'use client'` pages with no SSR.
 * **MANDATORY:** Keep public product and shop pages server-rendered so search engine crawlers and WhatsApp preview bots receive complete HTML and OpenGraph tags.
 
+### ❌ ANTI-PATTERN 8: Never Create Manual or Unmanaged Threads
+* **FORBIDDEN:** Calling `new Thread(...)`, `Executors.newFixedThreadPool(...)`, or `ForkJoinPool.commonPool()` directly inside services or controllers.
+* **MANDATORY:** Inject `ThreadPoolManager`, `ExecutorService` (qualified with `@Qualifier("commonExecutor")`), or use Spring's `@Async` annotation. This ensures bounded queueing, proper thread naming in logs, and graceful shutdown during deployments.
+
 ---
 
 ## 4. Standard Implementation Templates
@@ -153,9 +158,10 @@ public class ShopService {
 ```
 
 ### C. Controller Pattern (`@RestController`)
+* All REST controllers must include `/wjlapi` as the base path (e.g. `/wjlapi/api/v1/...` and `/wjlapi/v1/...`), with legacy `/api/v1/...` aliases where backwards compatibility is needed.
 ```java
 @RestController
-@RequestMapping("/api/v1/public/shops")
+@RequestMapping({"/wjlapi/api/v1/public/shops", "/wjlapi/v1/public/shops", "/api/v1/public/shops"})
 @RequiredArgsConstructor
 public class PublicShopController {
     private final ShopService shopService;
@@ -172,6 +178,29 @@ public class PublicShopController {
 * Items are visually grouped by `shopName` on the cart screen.
 * When checking out, the frontend submits the local items to `POST /api/v1/client/cart/merge`.
 
+### E. Asynchronous Concurrency Pattern (`ThreadPoolManager` / `ExecutorService`)
+```java
+@Service
+@RequiredArgsConstructor
+public class NotificationService {
+
+    // Option 1: Inject ThreadPoolManager for CompletableFuture utilities & metrics
+    private final ThreadPoolManager threadPoolManager;
+
+    // Option 2: Inject standard ExecutorService directly
+    @Qualifier("commonExecutor")
+    private final ExecutorService executorService;
+
+    public void sendNotificationAsync(String recipient, String message) {
+        // Fire-and-forget
+        threadPoolManager.execute(() -> doSend(recipient, message));
+
+        // Or with CompletableFuture
+        CompletableFuture<Boolean> future = threadPoolManager.supplyAsync(() -> doSendWithAck(recipient, message));
+    }
+}
+```
+
 ---
 
 ## 5. Verification Checklist Before Committing Changes
@@ -183,3 +212,4 @@ Before an AI agent marks a task complete, verify:
 4. [ ] Does the repository use `JdbcClient` with named parameters (no raw SQL injection)?
 5. [ ] Did I preserve the `mode=never` setting so existing database tables are not dropped or overwritten?
 6. [ ] Is the public frontend page server-rendered with SEO meta tags?
+7. [ ] Did I avoid manual thread creation (`new Thread()`) and use `ThreadPoolManager` / `ExecutorService` or `@Async` instead?

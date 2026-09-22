@@ -30,10 +30,18 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/api/v1/products/**", "/api/v1/adm/**").permitAll()
-                .requestMatchers("/v1/seller/**", "/api/v1/seller/**").permitAll()
+                .requestMatchers("/error", "/favicon.ico", "/login.html", "/authorized.html").permitAll()
+                .requestMatchers("/wjl", "/wjl/", "/wjl/**").permitAll()
+                .requestMatchers("/wjlapi/api/v1/auth/**", "/wjlapi/v1/auth/**", "/api/v1/auth/**").permitAll()
+                .requestMatchers(
+                    "/wjlapi/api/v1/products/**", "/wjlapi/v1/products/**",
+                    "/wjlapi/api/v1/adm/**", "/wjlapi/v1/adm/**",
+                    "/api/v1/products/**", "/api/v1/adm/**"
+                ).permitAll()
+                .requestMatchers(
+                    "/wjlapi/v1/seller/**", "/wjlapi/api/v1/seller/**",
+                    "/v1/seller/**", "/api/v1/seller/**"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             // Error handling: Clean JSON responses matching {"detail": {"code": "...", "message": "..."}}

@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  wejoinlife-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-}
+    container_name: wejoinlife-app-prod
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3000:3000"  # React Frontend Portal
+      - "8080:8080"  # Spring Boot Backend REST API
+    environment:
+      # Database Configuration
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-vconnect_prod_portal}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-}
+
+      # Security & JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - JWT_COOKIE_DOMAIN=${JWT_COOKIE_DOMAIN:-}
+      - JWT_COOKIE_NAME=${JWT_COOKIE_NAME:-wjl_jwt}
+      - CLIENT_PASS_SALT=${CLIENT_PASS_SALT:-38fc4120}
+
+      # Multi-Database Mapping
+      - PORTAL_DB=${PORTAL_DB:-vconnect_prod_portal}
+      - CATALOG_DB=${CATALOG_DB:-vconnect_prod_catalog}
+      - VCONNECT_DB=${VCONNECT_DB:-vconnect}
+      - CART_COOKIE_NAME=${CART_COOKIE_NAME:-vconnect_cart}
+
+      - NODE_ENV=production
+    volumes:
+      - ./uploads:/opt/uploads
+    networks:
+      - wjl-network
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: wejoinlife-nginx-prod
+    restart: always
+    depends_on:
+      - wejoinlife-app
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - wjl-network
+
+networks:
+  wjl-network:
+    name: wjl-network
+    driver: bridge

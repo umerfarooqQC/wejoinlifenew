@@ -167,6 +167,9 @@
                 <button type="button" class="btn-preset" onclick="fillForm('notfound@wejoinlife.com', '123456', false)">
                     🔴 Not Found (Status 300)
                 </button>
+                <a href="/wjl/dashboard" class="btn btn-sm btn-info ml-auto font-weight-bold text-white shadow-sm" style="text-decoration:none;">
+                    ⚛️ Open React App (/wjl/) &rarr;
+                </a>
             </div>
 
             <!-- Exact Main Card Structure from login.jsp -->
@@ -244,7 +247,7 @@
     </div>
 
     <script>
-        const API_BASE = window.location.port === '8080' ? '' : 'http://localhost:8080';
+        const API_BASE = '';
 
         function fillForm(email, password, remember) {
             $('#email').val(email);
@@ -288,7 +291,7 @@
                 var isRemember = $("#rememberme").is(':checked');
 
                 $.ajax({
-                    url: API_BASE + '/api/v1/auth/login',
+                    url: API_BASE + '/wjlapi/api/v1/auth/login',
                     type: "POST",
                     contentType: "application/json",
                     xhrFields: {
@@ -321,7 +324,7 @@
                         } else {
                             // Status 0: Success
                             $("#statusBadge").attr('class', 'badge badge-success badge-status').text('Status: 0 (SUCCESS)');
-                            $("#succdiv").html("<strong>Login successful!</strong> Signed in as <code>" + resp.email + "</code> with role <strong>" + resp.role + "</strong>.").show();
+                            $("#succdiv").html("<strong>Login successful!</strong> Signed in as <code>" + resp.email + "</code> with role <strong>" + resp.role + "</strong>.<div class='mt-2'><a href='/authorized.html' class='btn btn-success btn-sm font-weight-bold text-white shadow-sm' style='text-decoration:none;'>🚀 Open Authorized React App Page &rarr;</a></div>").show();
 
                             if (resp.accessToken) {
                                 localStorage.setItem('accessToken', resp.accessToken);

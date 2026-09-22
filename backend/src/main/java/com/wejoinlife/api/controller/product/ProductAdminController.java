@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/api/v1/products", "/api/v1/adm"})
+@RequestMapping({"/wjlapi/api/v1/products", "/wjlapi/v1/products", "/wjlapi/api/v1/adm", "/wjlapi/v1/adm", "/api/v1/products", "/api/v1/adm"})
 @RequiredArgsConstructor
 public class ProductAdminController {
 

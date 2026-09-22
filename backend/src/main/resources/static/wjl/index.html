@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/wjl/">
+    <title>WeJoinLife React Portal | /wjl/</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- React 18 and Babel for instant in-browser execution -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #0a0e17;
+            --bg-card: rgba(18, 24, 38, 0.75);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --accent-glow: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #7c3aed 100%);
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-subtle: #64748b;
+            --code-bg: #030712;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(124, 58, 237, 0.10) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 60%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 36px;
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-card);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .brand-badge {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .route-pill {
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-glow);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-link-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-link-btn:hover, .nav-link-btn.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border-card);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+
+        .btn-danger {
+            background: rgba(244, 63, 94, 0.12);
+            color: var(--accent-rose);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(244, 63, 94, 0.25);
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 18px;
+            position: relative;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-subtle);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        .metric-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .code-container {
+            background: var(--code-bg);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 10px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #38bdf8;
+            overflow-x: auto;
+            max-height: 280px;
+        }
+
+        .code-title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .route-tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-card);
+            padding-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // In-Memory Token (Never saved in localStorage)
+        let inMemoryJwt = null;
+
+        function ReactWjlApp() {
+            // Routing state: current sub-route within /wjl/
+            const [currentRoute, setCurrentRoute] = useState(
+                window.location.pathname.startsWith('/wjl') ? window.location.pathname : '/wjl/dashboard'
+            );
+
+            const [authState, setAuthState] = useState({
+                loading: true,
+                authenticated: false,
+                user: null,
+                error: null
+            });
+
+            const [apiTestResult, setApiTestResult] = useState(null);
+            const [isTestingApi, setIsTestingApi] = useState(false);
+
+            // Handle client-side routing within /wjl/
+            const navigateTo = (path) => {
+                window.history.pushState({}, '', path);
+                setCurrentRoute(path);
+            };
+
+            useEffect(() => {
+                const onPopState = () => setCurrentRoute(window.location.pathname);
+                window.addEventListener('popstate', onPopState);
+                return () => window.removeEventListener('popstate', onPopState);
+            }, []);
+
+            // Initial Handshake: Cookie-to-Bearer Token Exchange
+            const checkSession = async () => {
+                setAuthState(prev => ({ ...prev, loading: true, error: null }));
+                try {
+                    const response = await fetch('/wjlapi/api/v1/auth/me', {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'include' // Transmits wjl_jwt cookie across /wjl/ routes
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.accessToken) {
+                            inMemoryJwt = data.accessToken;
+                        }
+                        setAuthState({
+                            loading: false,
+                            authenticated: data.authenticated,
+                            user: data,
+                            error: null
+                        });
+                    } else {
+                        inMemoryJwt = null;
+                        setAuthState({
+                            loading: false,
+                            authenticated: false,
+                            user: null,
+                            error: `Session check HTTP ${response.status} (Unauthorized)`
+                        });
+                    }
+                } catch (err) {
+                    inMemoryJwt = null;
+                    setAuthState({
+                        loading: false,
+                        authenticated: false,
+                        user: null,
+                        error: err.message
+                    });
+                }
+            };
+
+            useEffect(() => {
+                checkSession();
+            }, []);
+
+            // Logout
+            const handleLogout = async () => {
+                try {
+                    await fetch('/wjlapi/api/v1/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                } catch (e) {
+                    console.error('Logout error:', e);
+                } finally {
+                    inMemoryJwt = null;
+                    window.location.href = '/login.html';
+                }
+            };
+
+            // Test calling API sending Authorization: Bearer <in_memory_token>
+            const testBearerApi = async () => {
+                setIsTestingApi(true);
+                try {
+                    const headers = { 'Accept': 'application/json' };
+                    if (inMemoryJwt) {
+                        headers['Authorization'] = `Bearer ${inMemoryJwt}`;
+                    }
+
+                    const res = await fetch('/wjlapi/api/v1/auth/me', {
+                        method: 'GET',
+                        headers: headers
+                    });
+                    const data = await res.json();
+                    setApiTestResult({
+                        route: currentRoute,
+                        authHeader: headers['Authorization'] ? headers['Authorization'].substring(0, 32) + '...' : 'None',
+                        status: res.status,
+                        ok: res.ok,
+                        timestamp: new Date().toLocaleTimeString(),
+                        data: data
+                    });
+                } catch (err) {
+                    setApiTestResult({
+                        route: currentRoute,
+                        status: 'Error',
+                        ok: false,
+                        timestamp: new Date().toLocaleTimeString(),
+                        data: { error: err.message }
+                    });
+                } finally {
+                    setIsTestingApi(false);
+                }
+            };
+
+            if (authState.loading) {
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(56, 189, 248, 0.2)', borderTopColor: '#38bdf8', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                        <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading React App on /wjl/...</span>
+                        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                    </div>
+                );
+            }
+
+            // UNAUTHENTICATED STATE
+            if (!authState.authenticated) {
+                return (
+                    <div>
+                        <header className="navbar">
+                            <div className="navbar-brand">
+                                <span className="brand-badge">WeJoinLife</span>
+                                <span className="route-pill">{currentRoute}</span>
+                            </div>
+                            <a href="/login.html" className="btn btn-primary">Go to Login</a>
+                        </header>
+                        <div className="container">
+                            <div className="card" style={{ maxWidth: '600px', margin: '60px auto', textAlign: 'center', padding: '50px 30px' }}>
+                                <div style={{ fontSize: '42px', marginBottom: '16px' }}>🔒</div>
+                                <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>Authentication Required</h1>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+                                    Route <code>{currentRoute}</code> is protected. No valid <code>wjl_jwt</code> cookie session was found.
+                                </p>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                                    <a href="/login.html" className="btn btn-primary">👉 Login on J2EE Portal</a>
+                                    <button onClick={checkSession} className="btn" style={{ border: '1px solid var(--border-card)', color: 'white' }}>🔄 Retry</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // AUTHENTICATED STATE
+            const user = authState.user;
+            return (
+                <div>
+                    <!-- Navbar -->
+                    <header className="navbar">
+                        <div className="navbar-brand">
+                            <span className="brand-badge">WeJoinLife</span>
+                            <span className="route-pill">{currentRoute}</span>
+                        </div>
+                        <div className="navbar-actions">
+                            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                <strong style={{ color: 'white' }}>{user.email}</strong>
+                            </span>
+                            <a href="/login.html" className="nav-link-btn" style={{ fontSize: '12px' }}>
+                                🔙 Login Screen
+                            </a>
+                            <button onClick={handleLogout} className="btn btn-danger">
+                                Sign Out
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="container">
+                        <!-- Internal /wjl/ Routes Navigation Tabs -->
+                        <div className="route-tab-bar">
+                            <button 
+                                onClick={() => navigateTo('/wjl/dashboard')} 
+                                className={`nav-link-btn ${currentRoute === '/wjl/dashboard' || currentRoute === '/wjl/' || currentRoute === '/wjl' ? 'active' : ''}`}
+                            >
+                                📊 /wjl/dashboard
+                            </button>
+                            <button 
+                                onClick={() => navigateTo('/wjl/seller')} 
+                                className={`nav-link-btn ${currentRoute === '/wjl/seller' ? 'active' : ''}`}
+                            >
+                                🛍️ /wjl/seller
+                            </button>
+                            <button 
+                                onClick={() => navigateTo('/wjl/profile')} 
+                                className={`nav-link-btn ${currentRoute === '/wjl/profile' ? 'active' : ''}`}
+                            >
+                                👤 /wjl/profile
+                            </button>
+                        </div>
+
+                        <!-- Hero Info -->
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                            <div>
+                                <h1 style={{ fontSize: '26px', fontWeight: '700' }}>React Application Mounted at <code>/wjl/</code></h1>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
+                                    Active Route: <code style={{ color: 'var(--accent-glow)' }}>{currentRoute}</code> | Authentication: <strong style={{ color: 'var(--accent-emerald)' }}>Active SSO</strong>
+                                </p>
+                            </div>
+                            <button onClick={testBearerApi} disabled={isTestingApi || !inMemoryJwt} className="btn btn-primary">
+                                {isTestingApi ? 'Calling...' : '⚡ Call API with Bearer Header'}
+                            </button>
+                        </div>
+
+                        <!-- 4 Metric Cards -->
+                        <div className="grid-4">
+                            <div className="metric-card">
+                                <div className="metric-label">User Email</div>
+                                <div className="metric-value">{user.email}</div>
+                                <div className="metric-sub">Client ID: #{user.clientId || 'N/A'}</div>
+                            </div>
+                            <div className="metric-card">
+                                <div className="metric-label">Assigned Role</div>
+                                <div className="metric-value" style={{ textTransform: 'capitalize' }}>{user.role}</div>
+                                <div className="metric-sub">Profile: {user.profile || 'Default'}</div>
+                            </div>
+                            <div className="metric-card">
+                                <div className="metric-label">In-Memory Bearer Token</div>
+                                <div className="metric-value" style={{ fontSize: '14px', color: '#38bdf8', fontFamily: 'monospace' }}>
+                                    {inMemoryJwt ? inMemoryJwt.substring(0, 20) + '...' : 'None'}
+                                </div>
+                                <div className="metric-sub" style={{ color: 'var(--accent-emerald)' }}>✓ Memory Only (XSS Safe)</div>
+                            </div>
+                            <div className="metric-card">
+                                <div className="metric-label">Base Route</div>
+                                <div className="metric-value" style={{ color: 'var(--accent-glow)' }}>/wjl/*</div>
+                                <div className="metric-sub">Subpath: {currentRoute}</div>
+                            </div>
+                        </div>
+
+                        {/* Live API Inspector */}
+                        <div className="card">
+                            <div className="code-title-bar">
+                                <span>AUTHENTICATED USER SESSION (/wjlapi/api/v1/auth/me)</span>
+                                <span style={{ color: 'var(--accent-emerald)' }}>HTTP 200 OK</span>
+                            </div>
+                            <pre className="code-container">
+                                {JSON.stringify(user, null, 2)}
+                            </pre>
+
+                            {apiTestResult && (
+                                <div style={{ marginTop: '16px' }}>
+                                    <div className="code-title-bar">
+                                        <span>LIVE API RESULT via {apiTestResult.authHeader} at {apiTestResult.timestamp}</span>
+                                        <span style={{ color: apiTestResult.ok ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
+                                            Status: {apiTestResult.status}
+                                        </span>
+                                    </div>
+                                    <pre className="code-container">
+                                        {JSON.stringify(apiTestResult.data, null, 2)}
+                                    </pre>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ReactWjlApp />);
+    </script>
+</body>
+</html>

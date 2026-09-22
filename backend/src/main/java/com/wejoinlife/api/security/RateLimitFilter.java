@@ -47,7 +47,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Rate limit sensitive endpoints (login, register, checkout)
-        if (path.startsWith("/api/v1/auth/")) {
+        if (path.startsWith("/wjlapi/api/v1/auth/") || path.startsWith("/wjlapi/v1/auth/") || path.startsWith("/api/v1/auth/")) {
             String ip = getClientIp(request);
             Bucket bucket = cache.computeIfAbsent(ip, k -> createNewBucket());
 

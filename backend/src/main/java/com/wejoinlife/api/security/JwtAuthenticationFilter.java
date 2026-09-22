@@ -16,12 +16,18 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import jakarta.servlet.http.Cookie;
+import org.springframework.beans.factory.annotation.Value;
+
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
+    @Value("${application.security.jwt.cookie-name:wjl_jwt}")
+    private String jwtCookieName;
 
     @Override
     protected void doFilterInternal(
@@ -30,18 +36,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
+        String jwt = null;
 
-        // Strictly accept only Bearer tokens in Authorization header (No URL query params for security)
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // 1. Check Authorization: Bearer <token> header first
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } else if (request.getCookies() != null) {
+            // 2. Fallback to extracting from Cookie (for SSO from J2EE / React cross-app navigation)
+            for (Cookie cookie : request.getCookies()) {
+                if (jwtCookieName.equalsIgnoreCase(cookie.getName()) || 
+                    "wjl_jwt".equalsIgnoreCase(cookie.getName()) || 
+                    "access_token".equalsIgnoreCase(cookie.getName())) {
+                    jwt = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (jwt == null || jwt.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
         try {
-            userEmail = jwtService.extractUsername(jwt);
+            final String userEmail = jwtService.extractUsername(jwt);
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
                 if (jwtService.isTokenValid(jwt, userDetails)) {
@@ -52,6 +70,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    // Attach raw token and claims to request attributes for downstream controllers
+                    request.setAttribute("rawJwt", jwt);
+                    try {
+                        request.setAttribute("jwtClaims", jwtService.extractAllClaims(jwt));
+                    } catch (Exception ignored) {
+                    }
                 }
             }
         } catch (Exception e) {

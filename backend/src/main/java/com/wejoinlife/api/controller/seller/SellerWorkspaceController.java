@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping({"/v1/seller", "/api/v1/seller"})
+@RequestMapping({"/wjlapi/v1/seller", "/wjlapi/api/v1/seller", "/v1/seller", "/api/v1/seller"})
 @RequiredArgsConstructor
 public class SellerWorkspaceController {
 

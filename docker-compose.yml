@@ -1,14 +1,44 @@
+version: '3.8'
+
 services:
-  backend:
+  wejoinlife-dev:
     build:
-      context: ./backend
-    network_mode: "host"
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8080
+    container_name: wejoinlife-dev
+    ports:
+      - "3000:3000"   # React Frontend (Vite Dev Server)
+      - "8080:8080"   # Spring Boot Backend API
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/vconnect_prod_portal?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: devdb
-      SPRING_DATASOURCE_PASSWORD: ""
-      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-      PORTAL_DB: vconnect_prod_portal
-      CATALOG_DB: vconnect_prod_catalog
-      VCONNECT_DB: vconnect
-      CLIENT_PASS_SALT: 38fc4120
+      - DB_HOST=host.docker.internal
+      - DB_PORT=3306
+      - DB_NAME=vconnect_prod_portal
+      - DB_USERNAME=${DB_USERNAME:-devdb}
+      - DB_PASSWORD=${DB_PASSWORD:-}
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - CLIENT_PASS_SALT=38fc4120
+      - PORTAL_DB=vconnect_prod_portal
+      - CATALOG_DB=vconnect_prod_catalog
+      - VCONNECT_DB=vconnect
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # File change detection on Windows mounts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Sync source code folders for live editing
+      - ./frontend:/app/frontend
+      - ./backend:/app/backend
+      - ./dev-start.sh:/app/dev-start.sh
+      - ./.env:/app/.env
+      # Prevent container build files from conflicting with host
+      - /app/frontend/node_modules
+      - /app/backend/target
+      - ./uploads:/opt/uploads
+    command: /app/dev-start.sh
+    entrypoint: ["/bin/bash", "-c", "cp /app/dev-start.sh /tmp/dev-start.sh && sed -i 's/\\r$$//' /tmp/dev-start.sh && chmod +x /tmp/dev-start.sh && /tmp/dev-start.sh"]
+
+networks:
+  default:
+    name: wjl-dev-network
