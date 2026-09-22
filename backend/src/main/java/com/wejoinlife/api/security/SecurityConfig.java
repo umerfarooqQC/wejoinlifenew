@@ -33,19 +33,20 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/products/**", "/api/v1/adm/**").permitAll()
+                .requestMatchers("/v1/seller/**", "/api/v1/seller/**").permitAll()
                 .anyRequest().authenticated()
             )
-            // Error handling: Clean JSON responses
+            // Error handling: Clean JSON responses matching {"detail": {"code": "...", "message": "..."}}
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(401);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"timestamp\":\"" + java.time.LocalDateTime.now() + "\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Full authentication is required to access this resource.\"}");
+                    response.getWriter().write("{\"detail\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Full authentication is required to access this resource.\"}}");
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                     response.setStatus(403);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"timestamp\":\"" + java.time.LocalDateTime.now() + "\",\"status\":403,\"error\":\"Forbidden\",\"message\":\"You do not have permission to access this resource.\"}");
+                    response.getWriter().write("{\"detail\":{\"code\":\"FORBIDDEN\",\"message\":\"You do not have permission to access this resource.\"}}");
                 })
             )
             // Security Filter Order
