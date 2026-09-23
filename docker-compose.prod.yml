@@ -11,9 +11,9 @@ services:
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "3000:3000"  # React Frontend Portal
-      - "8080:8080"  # Spring Boot Backend REST API
+    expose:
+      - "3000"  # React Frontend (accessible internally to Docker Nginx)
+      - "8080"  # Spring Boot REST API (accessible internally to Docker Nginx)
     environment:
       # Database Configuration
       - DB_HOST=${DB_HOST:-host.docker.internal}
@@ -51,8 +51,7 @@ services:
     depends_on:
       - wejoinlife-app
     ports:
-      - "80:80"
-      - "443:443"
+      - "8181:80"   # Host port 8181 -> Docker Nginx (avoids host 80/443 conflict)
     networks:
       - wjl-network
 
