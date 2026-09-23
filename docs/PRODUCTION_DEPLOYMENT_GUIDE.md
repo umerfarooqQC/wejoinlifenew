@@ -1,239 +1,341 @@
-# WeJoinLife - Production Server Deployment Guide
+# WeJoinLife - Production Server Deployment Runbook
 
-This guide outlines how to deploy and manage **WeJoinLife** on a production Linux server (Ubuntu/Debian/RHEL) using Docker and Docker Compose, mirroring the container architecture of `eda-health-hub`.
+This document is the exact step-by-step guide to deploying and running **WeJoinLife** on a Linux production server (Ubuntu/Debian/CentOS/RHEL) alongside existing host services (Host Nginx, Host Tomcat, and Host MariaDB/MySQL).
 
 ---
 
-## 1. System Architecture Overview
+## 1. System Architecture & Port Allocation
 
 ```mermaid
 graph TD
-    Client["User / Web Browser"] -->|HTTP :80 / HTTPS :443| Nginx["wejoinlife-nginx-prod (Reverse Proxy)"]
+    Client["User / Web Browser"] -->|HTTPS :443 / HTTP :80| HostNginx["Host Nginx (vconnectlive.com)"]
     
-    subgraph AppContainer ["wejoinlife-app-prod (Unified App Container)"]
-        Frontend["React / Vite Portal (:3000)<br/>Served via 'serve -s dist'"]
-        Backend["Spring Boot API (:8080)<br/>Java 25 Embedded Engine"]
+    HostNginx -->|/ (Default)| HostTomcat["Host Tomcat (:8080)<br/>Existing Legacy / J2EE Apps"]
+    HostNginx -->|/wjl/ and /wjlapi/| DockerNginx["wejoinlife-nginx-prod (:8181)<br/>Frontline Docker Gateway"]
+    
+    subgraph DockerNetwork ["Internal Docker Network (wjl-network)"]
+        DockerNginx -->|/wjl/| ReactFrontend["React / Vite Portal (:3000)<br/>Static SPA via Node 'serve'"]
+        DockerNginx -->|/wjlapi/| SpringBackend["Spring Boot REST API (:8080)<br/>Java 25 Embedded Engine"]
     end
     
-    subgraph HostServer ["Host Machine Services"]
-        MySQL[("MySQL Database Server (:3306)<br/>Accessible via host.docker.internal")]
-        Uploads[("Persistent Uploads Directory<br/>./uploads -> /opt/uploads")]
+    subgraph HostDatabase ["Host Machine Services"]
+        SpringBackend -->|172.% to host.docker.internal:3306| MariaDB[("Host MariaDB / MySQL Server (:3306)<br/>Accessible strictly to Docker subnet")]
     end
-    
-    Nginx -->|/ and /wjl/| Frontend
-    Nginx -->|/wjlapi/ and /api/| Backend
-    Backend -->|host.docker.internal:3306| MySQL
-    Backend --> Uploads
 ```
 
-### Components
-1. **`wejoinlife-app`**: A multi-stage production container running:
-   - **Backend**: Spring Boot REST API with Java 25 target on port `8080`.
-   - **Frontend**: React + Vite SPA on port `3000` (served with static SPA routing via Node `serve`).
-2. **`nginx`**: Frontline reverse proxy running on port `80` and `443` with Brotli and Gzip compression, routing `/wjl/` to the React portal and `/wjlapi/` / `/api/` to the Spring Boot REST API.
-3. **Database**: Can run as MySQL on the host system (resolved cleanly via `host.docker.internal:3306`), or on an external database server (AWS RDS / Cloud SQL / DigitalOcean Managed DB).
+### Port Allocation (Zero Conflicts)
+| Service | Location | Port | Description |
+| :--- | :--- | :--- | :--- |
+| **Host Nginx** | Linux Host | `80` & `443` | Main reverse proxy for `vconnectlive.com` and SSL termination |
+| **Host Tomcat** | Linux Host | `8080` | Existing applications and login system (completely untouched) |
+| **Host MariaDB** | Linux Host | `3306` | Main database server |
+| **Docker Nginx** | Docker Container | `8181:80` | Listens on host `8181`, handles internal Docker traffic |
+| **Spring Boot API**| Docker Container | `8080` (Internal) | Isolated inside `wjl-network` (does NOT touch host port 8080) |
+| **React Frontend** | Docker Container | `3000` (Internal) | Isolated inside `wjl-network` |
 
 ---
 
-## 2. Server Prerequisites
+## 2. Step-by-Step Server Setup (Post-Git Clone)
 
-On your production server (e.g. Ubuntu 22.04 / 24.04 LTS):
-
-### A. Install Docker & Docker Compose
+### Step 1: Navigate into Project & Set Script Permissions
 ```bash
-# Update package lists
-sudo apt update && sudo apt upgrade -y
-
-# Install Docker dependencies
-sudo apt install -y ca-certificates curl gnupg lsb-release
-
-# Add Docker's official GPG key & repository
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Install Docker Engine and Docker Compose plugin
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# Allow running Docker without sudo
-sudo usermod -aG docker $USER
-newgrp docker
-
-# Verify installation
-docker --version
-docker compose version
-```
-
-### B. Configure Firewall
-Ensure ports 80 (HTTP) and 443 (HTTPS) are open:
-```bash
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw allow 22/tcp
-sudo ufw enable
+cd ~/wejoinlifenew
+chmod +x start.sh dev-start.sh backend/mvnw
 ```
 
 ---
 
-## 3. Step-by-Step Deployment
-
-### Step 1: Clone Repository onto Production Server
-```bash
-cd /opt
-sudo git clone <YOUR_GIT_REPO_URL> wejoinlife
-cd wejoinlife
-sudo chown -R $USER:$USER /opt/wejoinlife
-```
-
-### Step 2: Configure Production Environment Variables (`.env`)
-Copy `.env.example` to create your active `.env`:
+### Step 2: Configure Production `.env` File
+Create your production `.env` from the example:
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-Review and update the following key variables in `.env`:
+Set the database connection and security keys:
 ```ini
-# Production Environment
 NODE_ENV=production
 
-# Database Connection
-# If MySQL is installed directly on this host server:
+# Database Connection (connects to Host MariaDB/MySQL)
 DB_HOST=host.docker.internal
 DB_PORT=3306
 DB_NAME=vconnect_prod_portal
-DB_USERNAME=your_db_username
-DB_PASSWORD=your_db_password
+DB_USERNAME=etn
+DB_PASSWORD=your_etn_password_here
 
-# Multi-Database Schema Mapping (if using split catalog/portal schemas)
+# Multi-Database Schema Mapping
 PORTAL_DB=vconnect_prod_portal
 CATALOG_DB=vconnect_prod_catalog
 VCONNECT_DB=vconnect
+CART_COOKIE_NAME=vconnect_cart
 
-# Domain & Cookie Settings
-# Set your domain for cross-subdomain SSO cookies, e.g.:
+# Security & Cookies
+JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+JWT_EXPIRATION=86400000
+JWT_COOKIE_NAME=wjl_jwt
 JWT_COOKIE_DOMAIN=.vconnectlive.com
-
-# Production JWT Secret (must be a strong 256-bit hexadecimal string)
-JWT_SECRET=YOUR_SECURE_256_BIT_SECRET_KEY_HERE
 CLIENT_PASS_SALT=38fc4120
 ```
-
-> [!TIP]
-> To generate a secure 256-bit JWT secret, run:
-> ```bash
-> openssl rand -hex 32
-> ```
+*(Press `Ctrl + O`, `Enter` to save, and `Ctrl + X` to exit)*.
 
 ---
 
-### Step 3: Build & Launch Containers
-Launch the stack in detached mode using `docker-compose.prod.yml`:
+### Step 3: Configure Host MariaDB / MySQL Permissions
+
+Docker containers connect to host services through the internal Docker bridge subnet (`172.x.x.x`). By default, users created with `localhost` or `192.168.x.x` will be rejected by MariaDB.
+
+#### 1. Check Docker Subnet on Host
 ```bash
+ip addr show docker0
+```
+*(Confirms Docker subnet is `172.17.0.1/16`)*.
+
+#### 2. Log into MariaDB as Root
+```bash
+sudo mysql
+```
+
+#### 3. Create the Database User for Docker Subnet (`172.%`)
+Run these SQL commands to grant `etn` permission strictly from Docker:
+```sql
+-- 1. Create user for Docker subnet (replace 'your_password' with real password, or '' if blank):
+CREATE USER 'etn'@'172.%' IDENTIFIED BY 'your_password';
+
+-- 2. Grant permissions on WeJoinLife databases:
+GRANT ALL PRIVILEGES ON vconnect.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_catalog.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_catapulte.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_commons.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_expert_system.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_forms.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_functions.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_pages.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_portal.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_prod_catalog.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_prod_portal.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_prod_shop.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_shop.* TO 'etn'@'172.%';
+GRANT ALL PRIVILEGES ON vconnect_sync.* TO 'etn'@'172.%';
+
+-- 3. Apply changes:
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+---
+
+### Step 4: Verify Docker Compose Configuration (`docker-compose.prod.yml`)
+
+Ensure `docker-compose.prod.yml` has the following battle-tested configuration:
+```yaml
+version: '3.8'
+
+services:
+  wejoinlife-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-}
+    container_name: wejoinlife-app-prod
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "3000"  # React Frontend (accessible internally to Docker Nginx)
+      - "8080"  # Spring Boot REST API (accessible internally to Docker Nginx)
+    environment:
+      # Database Configuration
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-vconnect_prod_portal}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://${DB_HOST:-host.docker.internal}:${DB_PORT:-3306}/${DB_NAME:-vconnect_prod_portal}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+
+      # Security & JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - JWT_COOKIE_DOMAIN=${JWT_COOKIE_DOMAIN:-}
+      - JWT_COOKIE_NAME=${JWT_COOKIE_NAME:-wjl_jwt}
+      - CLIENT_PASS_SALT=${CLIENT_PASS_SALT:-38fc4120}
+
+      # Multi-Database Mapping
+      - PORTAL_DB=${PORTAL_DB:-vconnect_prod_portal}
+      - CATALOG_DB=${CATALOG_DB:-vconnect_prod_catalog}
+      - VCONNECT_DB=${VCONNECT_DB:-vconnect}
+      - CART_COOKIE_NAME=${CART_COOKIE_NAME:-vconnect_cart}
+
+      - NODE_ENV=production
+    volumes:
+      - ./uploads:/opt/uploads
+    networks:
+      - wjl-network
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: wejoinlife-nginx-prod
+    restart: always
+    depends_on:
+      - wejoinlife-app
+    ports:
+      - "8181:80"   # Host port 8181 -> Docker Nginx (avoids host 80/443 conflict)
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - wjl-network
+
+networks:
+  wjl-network:
+    name: wjl-network
+    driver: bridge
+```
+
+---
+
+### Step 5: Verify Docker `nginx.conf` (Frontend & API Routing)
+
+Ensure `nginx.conf` has the critical trailing slash on `proxy_pass http://wejoinlife-app:3000/;` so static assets are properly mapped:
+
+```nginx
+        # Root redirect to React Portal base path
+        location = / {
+            return 301 /wjl/;
+        }
+
+        location = /wjl {
+            return 301 /wjl/;
+        }
+
+        # React Frontend Application (served under /wjl/)
+        location /wjl/ {
+            proxy_pass http://wejoinlife-app:3000/;   # Trailing slash strips /wjl/ for Node 'serve'
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 90s;
+        }
+
+        # Spring Boot Backend API (primary /wjlapi/ routes)
+        location /wjlapi/ {
+            proxy_pass http://wejoinlife-app:8080/wjlapi/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+        }
+```
+
+---
+
+### Step 6: Configure Host Nginx (`vconnectlive.com`)
+
+In your main host Nginx configuration file (e.g. `/etc/nginx/conf.d/vconnectlive.conf` or `/etc/nginx/sites-available/...`), add these two proxy blocks inside your `server { ... }` block:
+
+```nginx
+    # 1. Forward React Portal traffic to Docker Nginx
+    location /wjl/ {
+        proxy_pass http://127.0.0.1:8181/wjl/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 2. Forward Spring Boot API traffic to Docker Nginx
+    location /wjlapi/ {
+        proxy_pass http://127.0.0.1:8181/wjlapi/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+```
+
+Test and reload Host Nginx:
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
+### Step 7: Build & Launch Docker Containers
+```bash
+cd ~/wejoinlifenew
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Docker will:
-1. Compile the Spring Boot API with Maven on Java 25.
-2. Compile the React frontend with Vite.
-3. Package both into `wejoinlife-app-prod`.
-4. Build `wejoinlife-nginx-prod`.
-5. Launch both containers and configure networking.
-
 ---
 
-### Step 4: Verify Deployment & Logs
-Check container health and status:
+### Step 8: Verify Operations & Logs
+
+#### 1. Check Container Status
 ```bash
 docker compose -f docker-compose.prod.yml ps
 ```
+Expected: Both `wejoinlife-app-prod` and `wejoinlife-nginx-prod` are **Up**.
 
-Expected output:
-```text
-NAME                   IMAGE                    COMMAND                  SERVICE          STATUS
-wejoinlife-app-prod    wejoinlife-wejoinlife-app   "/app/start.sh"       wejoinlife-app   Up (healthy)
-wejoinlife-nginx-prod  wejoinlife-nginx            "nginx -g 'daemon of…"   nginx            Up
-```
-
-Stream unified logs to verify the Spring Boot startup and React serving:
+#### 2. Check Port Bindings
 ```bash
-docker compose -f docker-compose.prod.yml logs -f
+docker port wejoinlife-nginx-prod
+```
+Expected: `80/tcp -> 0.0.0.0:8181`
+
+#### 3. Test HTTP Responses Locally
+```bash
+# Test Frontend:
+curl -I http://127.0.0.1:8181/wjl/
+# (Returns HTTP/1.1 200 OK)
+
+# Test Backend API:
+curl -I http://127.0.0.1:8181/wjlapi/api/v1/auth/me
+# (Returns HTTP/1.1 401 Unauthorized or 200 OK)
 ```
 
-To view logs for the application only:
+#### 4. Check Backend Startup Logs
 ```bash
-docker compose -f docker-compose.prod.yml logs -f wejoinlife-app
+docker logs --tail 50 wejoinlife-app-prod
 ```
+Expected: `Started WejoinlifeApiApplication in ... seconds (process running for ...)`
 
 ---
 
-## 4. Domain & SSL / HTTPS Setup
+## 3. Routine Operations & Maintenance
 
-### Option A: Cloudflare (Recommended for simplicity & DDoS protection)
-1. Point your domain's DNS `A` record (e.g., `portal.vconnectlive.com`) to your server IP.
-2. Enable Cloudflare Proxy (Orange Cloud).
-3. Set SSL/TLS mode to **"Full"** or **"Full (Strict)"** in Cloudflare.
-4. Nginx port 80 will immediately receive traffic with SSL terminated at the Cloudflare edge.
-
-### Option B: Let's Encrypt / Certbot on Host
-If you manage SSL directly on the server:
-1. Install Certbot:
-   ```bash
-   sudo apt install -y certbot
-   ```
-2. Stop the container temporarily or use webroot mode:
-   ```bash
-   sudo certbot certonly --standalone -d portal.vconnectlive.com
-   ```
-3. Mount the certificates into `docker-compose.prod.yml` under `nginx`:
-   ```yaml
-   volumes:
-     - /etc/letsencrypt:/etc/letsencrypt:ro
-   ```
-4. Update `nginx.conf` with the SSL certificate block:
-   ```nginx
-   server {
-       listen 443 ssl http2;
-       server_name portal.vconnectlive.com;
-
-       ssl_certificate /etc/letsencrypt/live/portal.vconnectlive.com/fullchain.pem;
-       ssl_certificate_key /etc/letsencrypt/live/portal.vconnectlive.com/privkey.pem;
-
-       location / {
-           proxy_pass http://wejoinlife-app:3000;
-           ...
-       }
-       location /wjlapi/ {
-           proxy_pass http://wejoinlife-app:8080/wjlapi/;
-           ...
-       }
-   }
-   ```
-
----
-
-## 5. Routine Maintenance & Operations
-
-### Deploying Updates / Code Changes
-To deploy an updated release without manual downtime:
+### Pulling New Updates from Git
 ```bash
-cd /opt/wejoinlife
+cd ~/wejoinlifenew
 git pull origin main
 docker compose -f docker-compose.prod.yml up -d --build
 ```
-Docker will rebuild the layers that changed and gracefully replace the running containers.
 
-### Restarting the Services
+### Restarting Containers
 ```bash
-# Restart entire stack
+# Restart everything:
 docker compose -f docker-compose.prod.yml restart
 
-# Restart app container only
+# Restart only Nginx (takes 1 second):
+docker compose -f docker-compose.prod.yml restart nginx
+
+# Restart only Spring Boot + React app:
 docker compose -f docker-compose.prod.yml restart wejoinlife-app
 ```
 
@@ -242,35 +344,14 @@ docker compose -f docker-compose.prod.yml restart wejoinlife-app
 docker compose -f docker-compose.prod.yml down
 ```
 
-### Viewing Resource Consumption
-Monitor CPU and RAM usage in real time:
-```bash
-docker stats
-```
-
 ---
 
-## 6. Troubleshooting Common Issues
+## 4. Key Gotchas & Solutions Summary
 
-### Issue 1: `Connection refused` when connecting to MySQL on Host
-- **Cause**: MySQL on the host is bound only to `127.0.0.1`, ignoring Docker network requests.
-- **Solution**: Open `/etc/mysql/mysql.conf.d/mysqld.cnf` on host and ensure:
-  ```ini
-  bind-address = 0.0.0.0
-  ```
-  Then restart MySQL:
-  ```bash
-  sudo systemctl restart mysql
-  ```
-- Also verify that the MySQL user has permissions from any host (`'user'@'%'`):
-  ```sql
-  GRANT ALL PRIVILEGES ON vconnect_prod_portal.* TO 'your_db_username'@'%' IDENTIFIED BY 'your_db_password';
-  FLUSH PRIVILEGES;
-  ```
-
-### Issue 2: `502 Bad Gateway` on Nginx
-- **Cause**: `wejoinlife-app` is still compiling or booting up, or Spring Boot failed to connect to database.
-- **Solution**: Check backend logs:
-  ```bash
-  docker compose -f docker-compose.prod.yml logs --tail 100 wejoinlife-app
-  ```
+| Symptom | Cause | Solution |
+| :--- | :--- | :--- |
+| **`bind: address already in use on 8080`** | Host Tomcat already runs on 8080 | Map Docker Nginx to `8181:80` and keep Spring Boot port `8080` internal (`expose`) |
+| **`bind: address already in use on 80 / 443`** | Host Nginx already owns 80/443 | Do not bind Docker Nginx to 80/443; use `8181:80` and let Host Nginx proxy to it |
+| **`Failed to load module script (MIME type text/html)`** | Nginx forwarded `/wjl/assets` to `serve`, but `serve` has files at `/assets` | In Docker Nginx, set `proxy_pass http://wejoinlife-app:3000/;` (with trailing slash) |
+| **`502 Bad Gateway` on `/wjlapi/`** | Spring Boot failed to connect to database | Check `docker logs wejoinlife-app-prod`; verify `SPRING_DATASOURCE_URL` and MySQL user `172.%` |
+| **`Access denied for user 'etn'@'172.x.x.x'`** | User `etn` was only allowed from `192.168.x.x` | In MariaDB run `CREATE USER 'etn'@'172.%' ...` and grant privileges |
