@@ -45,6 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 2. Fallback to extracting from Cookie (for SSO from J2EE / React cross-app navigation)
             for (Cookie cookie : request.getCookies()) {
                 if (jwtCookieName.equalsIgnoreCase(cookie.getName()) || 
+                    "jwt".equalsIgnoreCase(cookie.getName()) ||
                     "wjl_jwt".equalsIgnoreCase(cookie.getName()) || 
                     "access_token".equalsIgnoreCase(cookie.getName())) {
                     jwt = cookie.getValue();

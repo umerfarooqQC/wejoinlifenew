@@ -39,7 +39,7 @@ function Navbar() {
           {user?.email}
         </span>
 
-        <button onClick={() => logout('/login.html')} className="btn btn-danger" style={{ marginLeft: '8px' }}>
+        <button onClick={() => logout('/vconnect/login.jsp')} className="btn btn-danger" style={{ marginLeft: '8px' }}>
           Sign Out
         </button>
       </nav>
@@ -199,7 +199,7 @@ function AppContent() {
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px' }}>
             No active J2EE session found. Please log in on the J2EE application to access <code>/wjl/</code>.
           </p>
-          <a href="http://localhost:8081/login.html" className="btn btn-primary">
+          <a href="/vconnect/login.jsp" className="btn btn-primary">
             👉 Go to J2EE Login Screen
           </a>
         </div>
