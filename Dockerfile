@@ -10,19 +10,16 @@
 FROM eclipse-temurin:25 AS backend-builder
 WORKDIR /app/backend
 
-# Copy Maven files first to leverage Docker layer caching
-COPY backend/pom.xml backend/mvnw ./
-COPY backend/.mvn .mvn
+# Install Maven directly so build does not rely on downloading/unpacking wrapper zips
+RUN apt-get update && apt-get install -y maven unzip curl && rm -rf /var/lib/apt/lists/*
 
-# Fix Windows CRLF line endings and set execute permissions
-RUN sed -i 's/\r$//' ./mvnw && chmod +x ./mvnw
-
-# Cache Maven dependencies
-RUN ./mvnw dependency:go-offline -B || true
+# Copy pom.xml first to cache dependencies
+COPY backend/pom.xml ./
+RUN mvn dependency:go-offline -B || true
 
 # Copy source and build executable JAR without running tests
 COPY backend/src src
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # --- STAGE 2: Frontend Build (Cache Dependencies) ---
 FROM node:22-alpine AS frontend-builder
