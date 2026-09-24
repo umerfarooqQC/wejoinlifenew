@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class SellerWorkspaceController {
 
     private final SellerWorkspaceService sellerWorkspaceService;
+    private final com.wejoinlife.api.service.SellerCatalogPriceService sellerCatalogPriceService;
 
     private String resolveRequestedShopId(
             String shopIdParam,
@@ -115,5 +116,18 @@ public class SellerWorkspaceController {
 
         return ResponseEntity.ok(response);
     }
+
+        @PostMapping("/catalog/price")
+        public ResponseEntity<com.wejoinlife.api.dto.seller.VerifyCatalogPriceResponse> updateCatalogPrice(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody com.wejoinlife.api.dto.seller.VerifyCatalogPriceRequest request) {
+
+        com.wejoinlife.api.dto.seller.VerifyCatalogPriceResponse response = sellerCatalogPriceService.verifyAndUpdatePrice(
+            authHeader,
+            request
+        );
+
+        return ResponseEntity.ok(response);
+        }
 }
 
