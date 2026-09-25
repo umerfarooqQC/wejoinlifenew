@@ -67,7 +67,6 @@ DB_PASSWORD=your_etn_password_here
 PORTAL_DB=vconnect_prod_portal
 CATALOG_DB=vconnect_prod_catalog
 VCONNECT_DB=vconnect
-CART_COOKIE_NAME=vconnect_cart
 
 # Security & Cookies
 JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
@@ -166,7 +165,6 @@ services:
       - PORTAL_DB=${PORTAL_DB:-vconnect_prod_portal}
       - CATALOG_DB=${CATALOG_DB:-vconnect_prod_catalog}
       - VCONNECT_DB=${VCONNECT_DB:-vconnect}
-      - CART_COOKIE_NAME=${CART_COOKIE_NAME:-vconnect_cart}
 
       - NODE_ENV=production
     volumes:

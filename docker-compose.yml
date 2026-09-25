@@ -1,18 +1,26 @@
 version: '3.8'
 
 services:
+
   wejoinlife-dev:
+
     build:
+
       context: .
+
       dockerfile: Dockerfile
+
       args:
         - VITE_API_URL=${VITE_API_URL:-}
     container_name: wejoinlife-dev
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
+
       - "3000:3000"   # React Frontend (Vite Dev Server)
+
       - "8080:8080"   # Spring Boot Backend API
+
     environment:
       # Database Configuration
       - DB_HOST=${DB_HOST:-host.docker.internal}
@@ -51,6 +59,7 @@ services:
     command: /app/dev-start.sh
     entrypoint: ["/bin/bash", "-c", "cp /app/dev-start.sh /tmp/dev-start.sh && sed -i 's/\\r$$//' /tmp/dev-start.sh && chmod +x /tmp/dev-start.sh && /tmp/dev-start.sh"]
 
+      - wjl-network
 networks:
   wjl-network:
     name: wjl-network

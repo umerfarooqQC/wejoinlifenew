@@ -3,7 +3,6 @@ package com.wejoinlife.api.controller.auth;
 import com.wejoinlife.api.dto.auth.AuthResponse;
 import com.wejoinlife.api.dto.auth.LoginRequest;
 import com.wejoinlife.api.service.AuthService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -34,25 +33,15 @@ public class AuthController {
     private final AuthService authService;
     private final JwtService jwtService;
 
-    @Value("${application.cart.cookie-name:vconnect_cart}")
-    private String cartCookieName;
-
     @Value("${application.security.jwt.cookie-name:wjl_jwt}")
     private String jwtCookieName;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody LoginRequest request,
-            HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
-        // Extract cart cookie if present in the incoming request
-        String existingCartSession = extractCookieValue(httpRequest, cartCookieName);
-        if (existingCartSession == null) {
-            existingCartSession = extractCookieValue(httpRequest, "session_id");
-        }
-
-        AuthService.LoginResult result = authService.login(request, existingCartSession);
+        AuthService.LoginResult result = authService.login(request);
 
         // Set cookies only on successful login (status == 0)
         if (result.authResponse().status() == 0) {
@@ -61,12 +50,7 @@ public class AuthController {
                 addCookie(httpResponse, jwtCookieName, result.authResponse().accessToken(), Duration.ofDays(1));
             }
 
-            // 2. Set the Cart Cookie if present (7 days expiry, path = /)
-            if (result.cartSessionId() != null) {
-                addCookie(httpResponse, cartCookieName, result.cartSessionId(), Duration.ofDays(7));
-            }
-
-            // 3. Set Remember-Me Cookies if requested (identical to JSP login.jsp)
+            // 2. Set Remember-Me Cookies if requested (identical to JSP login.jsp)
             if (result.rememberMeData() != null) {
                 var rme = result.rememberMeData();
                 addCookie(httpResponse, "_rme_cuid", rme.cuid(), Duration.ofDays(7));
@@ -125,24 +109,11 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> logout(HttpServletResponse response) {
         // Clear JWT cookie
         addCookie(response, jwtCookieName, "", Duration.ZERO);
-        // Clear Cart and Remember-Me cookies
-        addCookie(response, cartCookieName, "", Duration.ZERO);
+        // Clear Remember-Me cookies
         addCookie(response, "_rme_cuid", "", Duration.ZERO);
         addCookie(response, "_rme_token", "", Duration.ZERO);
         addCookie(response, "_rme_vld", "", Duration.ZERO);
         return ResponseEntity.ok(Map.of("status", 0, "message", "Logged out successfully"));
-    }
-
-    private String extractCookieValue(HttpServletRequest request, String cookieName) {
-        if (request.getCookies() == null) {
-            return null;
-        }
-        for (Cookie cookie : request.getCookies()) {
-            if (cookieName.equalsIgnoreCase(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        return null;
     }
 
     private void addCookie(HttpServletResponse response, String name, String value, Duration maxAge) {

@@ -15,7 +15,7 @@
 * **Security:** Spring Security + JJWT (Bearer header only) + Bucket4j rate limiting + Jsoup XSS sanitization.
 * **Async & Concurrency:** Spring `@EnableAsync`, managed `ThreadPoolTaskExecutor`, and common `ExecutorService` / `ThreadPoolManager`. No unmanaged ad-hoc threads.
 * **Frontend:** Next.js 15 (App Router, TypeScript, Tailwind CSS, Shadcn UI).
-* **State Management:** **Zustand** (with `persist` middleware to `localStorage`) for the multi-shop guest cart.
+* **State Management:** **Zustand** for client-side state.
 * **Database Note:** Connects to an **existing database**. `spring.sql.init.mode=never`. Do **NOT** run DDL table creation scripts unless instructed.
 
 ---
@@ -28,13 +28,12 @@ D:\work\wejoinlife/
 │   ├── config/              # Infrastructure beans (@Configuration + @Bean): PasswordEncoder, ThreadPoolConfig, ThreadPoolManager, RestClient, Clock
 │   ├── controller/          # REST API endpoints ONLY (@RestController). NO business logic. NO SQL.
 │   │   ├── public/          # 100% Public endpoints (Products, Shops, Categories). NO LOGIN NEEDED.
-│   │   ├── buyer/           # Buyer endpoints (Cart, Checkout, Profile). Role: BUYER.
+│   │   ├── buyer/           # Buyer endpoints (Checkout, Profile). Role: BUYER.
 │   │   ├── seller/          # Merchant endpoints (Products, Sub-Orders, Wallet). Role: SELLER.
 │   │   └── admin/           # Platform operator endpoints (Shops, Fees, Approvals). Role: ADMIN.
 │   ├── dto/                 # Request & Response contracts defined strictly as JAVA RECORDS.
 │   │   ├── auth/            # LoginRequest, RegisterRequest, AuthResponse
 │   │   ├── product/         # ProductCreateRequest, ProductResponse
-│   │   ├── cart/            # CartItemDto, CartMergeRequest
 │   │   └── order/           # CheckoutRequest, OrderResponse, SubOrderResponse
 │   ├── model/               # Domain POJOs and Enums representing business data.
 │   │   ├── enums/           # Role.java, OrderStatus.java, PaymentStatus.java
@@ -49,16 +48,15 @@ D:\work\wejoinlife/
 │   │   ├── (storefront)/    # 🌍 PUBLIC SHOPPING: Server-Side Rendered (SSR/SSG). SEO & Social Sharing.
 │   │   │   ├── page.tsx     # Homepage
 │   │   │   ├── shops/       # Shop directory & individual shop profiles (/shops/[slug])
-│   │   │   ├── products/    # Product details (/products/[slug]) with OpenGraph metadata
-│   │   │   └── cart/        # Multi-shop grouped cart (Guest friendly)
+│   │   │   └── products/    # Product details (/products/[slug]) with OpenGraph metadata
 │   │   └── (portal)/        # 🔒 PROTECTED DASHBOARDS: Client-side ('use client'). NO SEO needed.
 │   │       ├── seller/      # Seller Portal (Products, Sub-Orders, Wallet)
 │   │       └── admin/       # Super Admin Portal (Shops, Approvals, Fees)
 │   ├── components/
 │   │   ├── ui/              # Shadcn UI primitives (Button, Dialog, Badge, Input, Table)
-│   │   ├── storefront/      # Buyer widgets (ProductCard, ShopCard, MultiShopCartGroup)
+│   │   ├── storefront/      # Buyer widgets (ProductCard, ShopCard)
 │   │   └── portal/          # Merchant & Admin widgets (DataTable, StatsCard)
-│   ├── stores/              # Zustand stores (useCartStore.ts for guest cart in localStorage)
+│   ├── stores/              # Zustand stores
 │   └── lib/                 # Shared utilities (utils.ts cn() helper, api.ts)
 ```
 
@@ -173,12 +171,7 @@ public class PublicShopController {
 }
 ```
 
-### D. Multi-Shop Guest Cart (`useCartStore.ts`)
-* All guest cart actions occur client-side and persist to `localStorage`.
-* Items are visually grouped by `shopName` on the cart screen.
-* When checking out, the frontend submits the local items to `POST /api/v1/client/cart/merge`.
-
-### E. Asynchronous Concurrency Pattern (`ThreadPoolManager` / `ExecutorService`)
+### D. Asynchronous Concurrency Pattern (`ThreadPoolManager` / `ExecutorService`)
 ```java
 @Service
 @RequiredArgsConstructor

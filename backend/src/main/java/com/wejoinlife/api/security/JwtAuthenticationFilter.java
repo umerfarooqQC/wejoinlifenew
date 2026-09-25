@@ -31,6 +31,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String jwtCookieName;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.endsWith("/auth/login") || 
+               path.endsWith("/login") ||
+               path.endsWith("/auth/register") || 
+               path.endsWith("/register") || 
+               path.endsWith("/auth/forgot-password") ||
+               path.endsWith("/forgot-password");
+    }
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
@@ -63,11 +74,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwt != null) {
                 log.info("[JwtFilter] Matched JWT from {} (length={})", source, jwt.length());
             } else {
-                log.warn("[JwtFilter] No matching JWT cookie found in request for {} {}. Looked for names: [{}, jwt, wjl_jwt, access_token]", 
+                log.debug("[JwtFilter] No matching JWT cookie found in request for {} {}. Looked for names: [{}, jwt, wjl_jwt, access_token]", 
                         request.getMethod(), uri, jwtCookieName);
             }
         } else {
-            log.warn("[JwtFilter] No cookies and no Authorization header received for {} {}", request.getMethod(), uri);
+            log.debug("[JwtFilter] No cookies and no Authorization header received for {} {}", request.getMethod(), uri);
         }
 
         if (jwt == null || jwt.isBlank()) {

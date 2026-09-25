@@ -37,16 +37,15 @@ public class AuthService {
     private String clientPassSalt;
 
     public record RememberMeData(String cuid, String token, String validator) {}
-    public record LoginResult(AuthResponse authResponse, String cartSessionId, RememberMeData rememberMeData) {}
+    public record LoginResult(AuthResponse authResponse, RememberMeData rememberMeData) {}
 
     @Transactional
-    public LoginResult login(LoginRequest request, String existingCartCookie) {
+    public LoginResult login(LoginRequest request) {
         // 1. Fetch user from target database
         Optional<ClientUser> userOpt = authRepository.findByEmailOrUsername(request.email());
         if (userOpt.isEmpty()) {
             return new LoginResult(
                     AuthResponse.error(300, "Username entered does not match any account", null),
-                    null,
                     null
             );
         }
@@ -58,7 +57,6 @@ public class AuthService {
             String gotoUrl = "/users/login.jsp?cuid=" + user.clientUuid();
             return new LoginResult(
                     AuthResponse.error(100, "Account not verified", gotoUrl),
-                    null,
                     null
             );
         }
@@ -67,7 +65,6 @@ public class AuthService {
         if (!verifyPassword(request.password(), user.pass(), user.clientUuid())) {
             return new LoginResult(
                     AuthResponse.error(200, "The password you have entered is incorrect", null),
-                    null,
                     null
             );
         }
@@ -75,10 +72,7 @@ public class AuthService {
         // 4. Update last login timestamp
         authRepository.updateLastLogin(user.id());
 
-        // 5. Handle Cart Cookie logic from JSP
-        String cartSessionToSet = handleCartSession(user.id(), existingCartCookie);
-
-        // 6. Handle Remember-Me tokens from JSP
+        // 5. Handle Remember-Me tokens from JSP
         String lgnToken = null;
         String lgnValidator = null;
         RememberMeData rememberMeData = null;
@@ -89,7 +83,7 @@ public class AuthService {
             rememberMeData = new RememberMeData(user.clientUuid(), lgnToken, lgnValidator);
         }
 
-        // 7. Resolve dynamic role (seller or buyer) and seller site IDs from database
+        // 6. Resolve dynamic role (seller or buyer) and seller site IDs from database
         boolean isSeller = authRepository.isSeller(user.clientUuid());
         String role = isSeller ? "seller" : "buyer";
         List<Integer> siteIds = isSeller ? authRepository.findSellerSiteIds(user.clientUuid()) : null;
@@ -111,7 +105,7 @@ public class AuthService {
         claims.put("profile", user.clientProfilId() != null ? user.clientProfilId() : "logged_in_user");
         String jwt = jwtService.generateToken(claims, userDetails);
 
-        // 8. Construct Success AuthResponse with both JWT, role, siteIds and legacy JSP fields
+        // 7. Construct Success AuthResponse with both JWT, role, siteIds and legacy JSP fields
         AuthResponse authResponse = AuthResponse.success(
                 jwt,
                 user.clientUuid(),
@@ -123,24 +117,7 @@ public class AuthService {
                 lgnValidator
         );
 
-        return new LoginResult(authResponse, cartSessionToSet, rememberMeData);
-    }
-
-    private String handleCartSession(String clientId, String guestSessionId) {
-        // If user already has a cart in DB, return that cart's session_id to maintain user's cart
-        var activeCartSession = authRepository.findActiveCartSession(clientId);
-        if (activeCartSession.isPresent()) {
-            return activeCartSession.get();
-        }
-
-        // If no cart in DB, delete empty carts and link guest cart if one was present
-        authRepository.deleteEmptyCarts(clientId);
-        if (guestSessionId != null && !guestSessionId.isBlank()) {
-            authRepository.assignGuestCartToClient(clientId, guestSessionId);
-            return guestSessionId;
-        }
-
-        return null;
+        return new LoginResult(authResponse, rememberMeData);
     }
 
     private boolean verifyPassword(String rawPassword, String storedHash, String clientUuid) {
