@@ -4,6 +4,7 @@ import { useAuth } from '../lib/useAuth';
 import { getAccessToken } from '../lib/authStore';
 import { apiClient } from '../lib/api';
 import RestaurantOnboarding from './components/restaurant/RestaurantOnboarding';
+import SellerPortalApp from './features/seller/SellerPortalApp';
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -150,22 +151,8 @@ function DashboardView() {
     </div>
   );
 }
-
 function SellerView() {
-  const { user } = useAuth();
-  return (
-    <div className="container">
-      <div className="card">
-        <h1 style={{ fontFamily: 'Outfit', fontSize: '26px', marginBottom: '8px' }}>
-          🛍️ Seller Portal (/wjl/seller)
-        </h1>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
-          Seller workspace for merchant account: <strong>{user?.email}</strong>
-        </p>
-        <p>Authorized Site IDs: <code>{user?.siteIds?.join(', ') || 'No shops'}</code></p>
-      </div>
-    </div>
-  );
+  return <SellerPortalApp />;
 }
 
 function ProfileView() {
@@ -184,56 +171,102 @@ function ProfileView() {
   );
 }
 
+function isSellerRole(role?: string): boolean {
+  if (!role) return false;
+  const normalized = role.toLowerCase().trim();
+  return normalized === 'seller' || normalized === 'role_seller' || normalized.includes('seller');
+}
+
 function AppContent() {
   const { user, isAuthenticated, isLoading } = useAuth();
 
+  // While checking auth handshake via /wjlapi/api/v1/auth/me, display loading indicator
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(56, 189, 248, 0.2)', borderTopColor: '#38bdf8', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading React Portal on /wjl/...</span>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#FFFFFF',
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: '52px',
+            height: '52px',
+            borderRadius: '50%',
+            backgroundColor: '#16C2D5',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#FFFFFF',
+            fontSize: '18px',
+            fontWeight: '800',
+            marginBottom: '16px',
+            boxShadow: '0 4px 14px rgba(22, 194, 213, 0.35)',
+          }}
+        >
+          WJL
+        </div>
+        <p style={{ color: '#736458', fontSize: '14px', fontWeight: '600' }}>
+          Verifying session & user role...
+        </p>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="container">
-        <div className="card" style={{ maxWidth: '560px', margin: '80px auto', textAlign: 'center', padding: '48px 24px' }}>
-          <div style={{ fontSize: '42px', marginBottom: '16px' }}>🔒</div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>Login Required</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px' }}>
-            No active J2EE session found. Please log in on the J2EE application to access <code>/wjl/</code>.
-          </p>
-          <a href="/vconnect/login.jsp" className="btn btn-primary">
-            👉 Go to J2EE Login Screen
-          </a>
-        </div>
-      </div>
-    );
-  }
+  const isSeller = isSellerRole(user?.role);
 
   return (
-    <div>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardView />} />
-        <Route path="/restaurant" element={<RestaurantOnboarding />} />
-        <Route path="/seller" element={<SellerView />} />
-        <Route path="/profile" element={<ProfileView />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </div>
+    <Routes>
+      {/* Root path: If seller role, route to /seller, else /dashboard */}
+      <Route
+        path="/"
+        element={
+          isSeller || !isAuthenticated ? (
+            <Navigate to="/seller" replace />
+          ) : (
+            <Navigate to="/dashboard" replace />
+          )
+        }
+      />
+      {/* Seller Portal Flow */}
+      <Route path="/seller/*" element={<SellerPortalApp />} />
+      {/* Dashboard & Other Views */}
+      <Route path="/dashboard" element={<DashboardView />} />
+      <Route path="/restaurant" element={<RestaurantOnboarding />} />
+      <Route path="/profile" element={<ProfileView />} />
+      {/* Catch-all fallback */}
+      <Route
+        path="*"
+        element={
+          isSeller ? (
+            <Navigate to="/seller" replace />
+          ) : (
+            <Navigate to="/dashboard" replace />
+          )
+        }
+      />
+    </Routes>
   );
 }
 
 export default function App() {
   return (
     // Crucial: basename="/wjl" ensures all React Router paths are under /wjl
-    <BrowserRouter basename="/wjl">
+    <BrowserRouter
+      basename="/wjl"
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AppContent />
     </BrowserRouter>
   );
 }
+

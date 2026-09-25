@@ -1,0 +1,64 @@
+.wjl-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--wjl-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--wjl-transition-fast);
+  outline: none;
+  background: transparent;
+  color: var(--wjl-color-text-secondary);
+}
+
+.wjl-icon-btn:focus-visible {
+  box-shadow: var(--wjl-focus-ring);
+}
+
+.wjl-icon-btn--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.wjl-icon-btn--md {
+  width: 40px;
+  height: 40px;
+}
+
+.wjl-icon-btn--lg {
+  width: 48px;
+  height: 48px;
+}
+
+.wjl-icon-btn--pill {
+  border-radius: var(--wjl-radius-pill);
+}
+
+.wjl-icon-btn--ghost:hover {
+  background-color: var(--wjl-color-surface-muted);
+  color: var(--wjl-color-text-primary);
+}
+
+.wjl-icon-btn--outline {
+  border-color: var(--wjl-color-border);
+}
+
+.wjl-icon-btn--outline:hover {
+  background-color: var(--wjl-color-surface-hover);
+}
+
+.wjl-icon-btn--primary {
+  background-color: var(--wjl-color-primary-light);
+  color: var(--wjl-color-primary-dark);
+}
+
+.wjl-icon-btn--primary:hover {
+  background-color: var(--wjl-color-primary);
+  color: #ffffff;
+}
+
+.wjl-icon-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

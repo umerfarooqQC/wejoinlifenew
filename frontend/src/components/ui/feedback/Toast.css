@@ -1,0 +1,80 @@
+/* Toast Container */
+.wjl-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+  max-width: 380px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.wjl-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: var(--wjl-color-surface);
+  border-radius: var(--wjl-radius-md);
+  box-shadow: var(--wjl-shadow-dropdown);
+  border-left: 4px solid var(--wjl-color-primary);
+  animation: wjl-toast-in 0.3s ease-out;
+}
+
+.wjl-toast--success { border-left-color: var(--wjl-color-success); }
+.wjl-toast--success .wjl-toast__icon { color: var(--wjl-color-success); }
+
+.wjl-toast--error { border-left-color: var(--wjl-color-error); }
+.wjl-toast--error .wjl-toast__icon { color: var(--wjl-color-error); }
+
+.wjl-toast--warning { border-left-color: var(--wjl-color-warning); }
+.wjl-toast--warning .wjl-toast__icon { color: var(--wjl-color-warning); }
+
+.wjl-toast--info { border-left-color: var(--wjl-color-primary); }
+.wjl-toast--info .wjl-toast__icon { color: var(--wjl-color-primary); }
+
+.wjl-toast__content { flex: 1; }
+.wjl-toast__title { font-size: 13px; font-weight: 700; color: var(--wjl-color-text-primary); }
+.wjl-toast__msg { font-size: 12px; color: var(--wjl-color-text-secondary); }
+
+.wjl-toast__close {
+  background: transparent; border: none; cursor: pointer; color: var(--wjl-color-text-muted);
+}
+
+@keyframes wjl-toast-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Tooltip */
+.wjl-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.wjl-tooltip {
+  visibility: hidden;
+  position: absolute;
+  background-color: var(--wjl-color-secondary);
+  color: white;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--wjl-radius-xs);
+  white-space: nowrap;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.wjl-tooltip-wrapper:hover .wjl-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.wjl-tooltip--top { bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px); }
+.wjl-tooltip--bottom { top: 100%; left: 50%; transform: translateX(-50%) translateY(6px); }

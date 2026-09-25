@@ -1,0 +1,215 @@
+/* ==========================================================================
+   REVIEW YOUR MENU PAGE STYLING
+   Exact implementation matching the visual reference image.
+   ========================================================================== */
+
+.wjl-review-menu-page {
+  background-color: #FFFFFF;
+  min-height: 100vh;
+  padding-bottom: 90px; /* Space for sticky bottom button */
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.wjl-review-menu-page--mobile-sim {
+  border-radius: var(--wjl-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--wjl-shadow-modal);
+  border: 1px solid var(--wjl-color-border);
+}
+
+/* Header */
+.wjl-rm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: var(--wjl-color-background);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.wjl-rm-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #EFECE6;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wjl-color-secondary);
+  cursor: pointer;
+  transition: all var(--wjl-transition-fast);
+}
+
+.wjl-rm-back-btn:hover {
+  background-color: var(--wjl-color-border);
+}
+
+.wjl-rm-header__title {
+  font-family: var(--wjl-font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--wjl-color-secondary);
+  text-align: center;
+  margin: 0;
+}
+
+/* Banner */
+.wjl-rm-banner-container {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.wjl-rm-banner {
+  background-color: #E6F7F9;
+  border: 1px solid #BEEBF2;
+  border-radius: var(--wjl-radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wjl-rm-banner__icon {
+  width: 28px;
+  height: 28px;
+  background-color: #10B981;
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wjl-rm-banner__text {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #2D221E;
+}
+
+.wjl-rm-banner__text strong {
+  font-weight: 700;
+  font-size: 14px;
+
+}
+
+.wjl-rm-banner__text span {
+  font-size: 12px;
+  color: #6E6259;
+}
+
+/* Category Pills */
+.wjl-rm-pills-container {
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+
+/* Main Content */
+.wjl-rm-content {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.wjl-rm-section__title {
+  font-family: var(--wjl-font-sans);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--wjl-color-secondary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.wjl-rm-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wjl-rm-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EFECE6;
+  border-radius: var(--wjl-radius-lg);
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(45, 34, 30, 0.02);
+  transition: all var(--wjl-transition-fast);
+}
+
+.wjl-rm-card:hover {
+  border-color: var(--wjl-color-primary);
+  box-shadow: 0 4px 12px rgba(22, 194, 213, 0.12);
+}
+
+.wjl-rm-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.wjl-rm-card__name {
+  font-family: var(--wjl-font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--wjl-color-secondary);
+  margin: 0;
+}
+
+.wjl-rm-card__price {
+  font-family: var(--wjl-font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--wjl-color-primary);
+}
+
+.wjl-rm-card__desc {
+  font-size: 13px;
+  color: var(--wjl-color-text-secondary);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.wjl-rm-card__footer {
+  border-top: 1px dashed #EFECE6;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.wjl-rm-edit-btn {
+  background: transparent;
+  border: none;
+  color: var(--wjl-color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+}
+
+.wjl-rm-edit-btn:hover {
+  color: var(--wjl-color-primary-hover);
+  text-decoration: underline;
+}
+
+/* Bottom Action Bar */
+.wjl-rm-bottom-bar {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(248, 246, 241, 0.8) 0%, #F8F6F1 100%);
+  backdrop-filter: blur(8px);
+  z-index: 30;
+}

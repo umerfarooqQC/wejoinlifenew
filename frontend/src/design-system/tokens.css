@@ -1,0 +1,108 @@
+/* ==========================================================================
+   WJL SELLER PORTAL DESIGN SYSTEM - CENTRALIZED DESIGN TOKENS
+   Exact match for Figma design: Pure white background, Cyan primary,
+   Espresso dark text, Serif titles (Playfair Display), Warm beige borders.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ------------------------------------------------------------------------
+     1. COLOR PALETTE (EXACT Figma MATCH)
+     ------------------------------------------------------------------------ */
+  /* Primary Cyan / Teal */
+  --wjl-color-primary: #1BC2D5;
+  --wjl-color-primary-hover: #14A8BA;
+  --wjl-color-primary-active: #0F8F9F;
+  --wjl-color-primary-light: #EBF8FA;
+  --wjl-color-primary-border: #1BC2D5;
+
+  /* Secondary Espresso & Warm Dark Brown */
+  --wjl-color-secondary: #2B1D14;
+  --wjl-color-secondary-hover: #1E140D;
+  --wjl-color-secondary-light: #F7F4F0;
+
+  /* Backgrounds & Surfaces */
+  --wjl-color-background: #FFFFFF;
+  --wjl-color-surface: #FFFFFF;
+  --wjl-color-surface-muted: #F7F4F0;
+  --wjl-color-surface-hover: #FAF8F5;
+
+  /* Borders & Dividers */
+  --wjl-color-border: #E8E2D9;
+  --wjl-color-border-subtle: #F2EEE9;
+  --wjl-color-border-focus: #1BC2D5;
+
+  /* Typography Colors */
+  --wjl-color-text-primary: #2B1D14;
+  --wjl-color-text-secondary: #736458;
+  --wjl-color-text-muted: #9E9185;
+  --wjl-color-text-disabled: #C7BFC0;
+  --wjl-color-text-on-primary: #FFFFFF;
+
+  /* Feedback Colors */
+  --wjl-color-success: #10B981;
+  --wjl-color-success-light: #ECFDF5;
+  --wjl-color-warning: #F59E0B;
+  --wjl-color-warning-light: #FEF3C7;
+  --wjl-color-error: #EF4444;
+  --wjl-color-error-light: #FEF2F2;
+
+  /* ------------------------------------------------------------------------
+     2. TYPOGRAPHY SCALE & FONTS
+     ------------------------------------------------------------------------ */
+  --wjl-font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --wjl-font-heading: 'Playfair Display', Georgia, serif;
+  --wjl-font-mono: 'JetBrains Mono', monospace;
+
+  /* Font Sizes */
+  --wjl-font-size-xs: 0.75rem;    /* 12px */
+  --wjl-font-size-sm: 0.875rem;   /* 14px */
+  --wjl-font-size-md: 1rem;       /* 16px */
+  --wjl-font-size-lg: 1.125rem;   /* 18px */
+  --wjl-font-size-xl: 1.35rem;    /* 21.6px */
+  --wjl-font-size-2xl: 1.625rem;  /* 26px */
+  --wjl-font-size-3xl: 2rem;      /* 32px */
+
+  /* Font Weights */
+  --wjl-font-weight-regular: 400;
+  --wjl-font-weight-medium: 500;
+  --wjl-font-weight-semibold: 600;
+  --wjl-font-weight-bold: 700;
+  --wjl-font-weight-extrabold: 800;
+
+  /* ------------------------------------------------------------------------
+     3. SPACING & RADIUS
+     ------------------------------------------------------------------------ */
+  --wjl-spacing-xs: 8px;
+  --wjl-spacing-sm: 12px;
+  --wjl-spacing-md: 16px;
+  --wjl-spacing-lg: 20px;
+  --wjl-spacing-xl: 24px;
+
+  --wjl-radius-sm: 8px;
+  --wjl-radius-md: 12px;
+  --wjl-radius-lg: 16px;
+  --wjl-radius-xl: 24px;
+  --wjl-radius-input: 14px;
+  --wjl-radius-pill: 9999px;
+
+  --wjl-shadow-card: 0 4px 14px rgba(43, 29, 20, 0.04);
+  --wjl-shadow-dropdown: 0 10px 30px rgba(43, 29, 20, 0.12);
+  --wjl-shadow-button: 0 4px 14px rgba(27, 194, 213, 0.35);
+
+  --wjl-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --wjl-focus-ring: 0 0 0 3px rgba(27, 194, 213, 0.25);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--wjl-font-sans);
+  background-color: var(--wjl-color-background);
+  color: var(--wjl-color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}

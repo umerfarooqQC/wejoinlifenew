@@ -1,0 +1,38 @@
+.wjl-avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--wjl-color-primary-light);
+  color: var(--wjl-color-primary-dark);
+  font-weight: var(--wjl-font-weight-bold);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.wjl-avatar--sm { width: 28px; height: 28px; font-size: 11px; }
+.wjl-avatar--md { width: 36px; height: 36px; font-size: 13px; }
+.wjl-avatar--lg { width: 48px; height: 48px; font-size: 16px; }
+.wjl-avatar--xl { width: 64px; height: 64px; font-size: 20px; }
+
+.wjl-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.wjl-avatar__status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.wjl-avatar__status--online { background-color: var(--wjl-color-success); }
+.wjl-avatar__status--offline { background-color: var(--wjl-color-text-disabled); }
+.wjl-avatar__status--busy { background-color: var(--wjl-color-error); }

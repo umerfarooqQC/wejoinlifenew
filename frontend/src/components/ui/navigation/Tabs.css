@@ -1,0 +1,82 @@
+.wjl-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--wjl-spacing-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wjl-tabs::-webkit-scrollbar { display: none; }
+
+.wjl-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--wjl-font-sans);
+  font-weight: var(--wjl-font-weight-semibold);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all var(--wjl-transition-fast);
+  white-space: nowrap;
+  outline: none;
+}
+
+/* Line Variant */
+.wjl-tabs--line {
+  border-bottom: 1px solid var(--wjl-color-border-subtle);
+}
+
+.wjl-tabs--line .wjl-tab {
+  padding: var(--wjl-spacing-xs) var(--wjl-spacing-md);
+  color: var(--wjl-color-text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.wjl-tabs--line .wjl-tab:hover {
+  color: var(--wjl-color-text-primary);
+}
+
+.wjl-tabs--line .wjl-tab--active {
+  color: var(--wjl-color-primary-dark);
+  border-bottom-color: var(--wjl-color-primary);
+}
+
+/* Pills Variant (Matches attached Figma/design screenshot!) */
+.wjl-tabs--pills .wjl-tab {
+  padding: 8px 18px;
+  border-radius: var(--wjl-radius-pill);
+  background-color: var(--wjl-color-secondary-light);
+  color: var(--wjl-color-secondary);
+  font-size: var(--wjl-font-size-sm);
+}
+
+.wjl-tabs--pills .wjl-tab:hover:not(.wjl-tab--active) {
+  background-color: var(--wjl-color-border);
+  color: var(--wjl-color-text-primary);
+}
+
+.wjl-tabs--pills .wjl-tab--active {
+  background-color: var(--wjl-color-primary);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(22, 194, 213, 0.3);
+}
+
+/* Tab Sizes */
+.wjl-tabs--sm .wjl-tab { font-size: var(--wjl-font-size-xs); }
+.wjl-tabs--md .wjl-tab { font-size: var(--wjl-font-size-sm); }
+.wjl-tabs--lg .wjl-tab { font-size: var(--wjl-font-size-md); }
+
+/* Badges inside Tabs */
+.wjl-tab__badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--wjl-radius-pill);
+  background-color: var(--wjl-color-border);
+  color: var(--wjl-color-text-secondary);
+}
+
+.wjl-tab__badge--active {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: inherit;
+}

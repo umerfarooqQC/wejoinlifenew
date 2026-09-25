@@ -1,0 +1,133 @@
+.wjl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--wjl-spacing-xs);
+  font-family: var(--wjl-font-sans);
+  font-weight: var(--wjl-font-weight-semibold);
+  border-radius: var(--wjl-radius-button);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: all var(--wjl-transition-fast);
+  outline: none;
+  text-decoration: none;
+}
+
+.wjl-btn:focus-visible {
+  box-shadow: var(--wjl-focus-ring);
+}
+
+.wjl-btn:disabled, .wjl-btn--loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Sizes */
+.wjl-btn--sm {
+  height: 32px;
+  padding: 0 var(--wjl-spacing-sm);
+  font-size: var(--wjl-font-size-xs);
+}
+
+.wjl-btn--md {
+  height: 42px;
+  padding: 0 var(--wjl-spacing-lg);
+  font-size: var(--wjl-font-size-sm);
+}
+
+.wjl-btn--lg {
+  height: 48px;
+  padding: 0 var(--wjl-spacing-xl);
+  font-size: var(--wjl-font-size-md);
+}
+
+.wjl-btn--full {
+  width: 100%;
+}
+
+.wjl-btn--pill {
+  border-radius: var(--wjl-radius-pill);
+}
+
+/* Primary Variant (Teal / Cyan matching prompt reference) */
+.wjl-btn--primary {
+  background-color: var(--wjl-color-primary);
+  color: var(--wjl-color-text-on-primary);
+  box-shadow: var(--wjl-shadow-button);
+}
+
+.wjl-btn--primary:hover:not(:disabled) {
+  background-color: var(--wjl-color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(22, 194, 213, 0.45);
+}
+
+.wjl-btn--primary:active:not(:disabled) {
+  background-color: var(--wjl-color-primary-active);
+  transform: translateY(0);
+}
+
+/* Secondary Variant (Dark Warm Brown) */
+.wjl-btn--secondary {
+  background-color: var(--wjl-color-secondary);
+  color: var(--wjl-color-text-on-secondary);
+}
+
+.wjl-btn--secondary:hover:not(:disabled) {
+  background-color: var(--wjl-color-secondary-hover);
+  transform: translateY(-1px);
+}
+
+.wjl-btn--secondary:active:not(:disabled) {
+  background-color: var(--wjl-color-secondary-active);
+}
+
+/* Outline Variant */
+.wjl-btn--outline {
+  background-color: transparent;
+  border-color: var(--wjl-color-border);
+  color: var(--wjl-color-text-primary);
+}
+
+.wjl-btn--outline:hover:not(:disabled) {
+  background-color: var(--wjl-color-surface-hover);
+  border-color: var(--wjl-color-text-muted);
+}
+
+/* Ghost Variant */
+.wjl-btn--ghost {
+  background-color: transparent;
+  color: var(--wjl-color-text-primary);
+}
+
+.wjl-btn--ghost:hover:not(:disabled) {
+  background-color: var(--wjl-color-surface-muted);
+}
+
+/* Danger Variant */
+.wjl-btn--danger {
+  background-color: var(--wjl-color-error);
+  color: #ffffff;
+}
+
+.wjl-btn--danger:hover:not(:disabled) {
+  background-color: var(--wjl-color-error-hover);
+}
+
+/* Spinner */
+.wjl-btn__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: wjl-spin 0.75s linear infinite;
+}
+
+@keyframes wjl-spin {
+  to { transform: rotate(360deg); }
+}
