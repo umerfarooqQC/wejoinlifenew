@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   wejoinlife-dev:
     build:
@@ -15,13 +16,13 @@ services:
     environment:
       # Database Configuration
       - DB_HOST=${DB_HOST:-host.docker.internal}
-      - DB_PORT=${DB_PORT:-3306}
+      - DB_PORT=${DB_PORT:-3299}
       - DB_NAME=${DB_NAME:-vconnect_prod_portal}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - SPRING_DATASOURCE_URL=jdbc:mysql://${DB_HOST:-host.docker.internal}:${DB_PORT:-3306}/${DB_NAME:-vconnect_prod_portal}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - DB_USERNAME=${DB_USERNAME:-devdb}
+      - DB_PASSWORD=${DB_PASSWORD:-}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://${DB_HOST:-host.docker.internal}:${DB_PORT:-3299}/${DB_NAME:-vconnect_prod_portal}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-devdb}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-}
       # Security & JWT Configuration
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
@@ -41,15 +42,20 @@ services:
       - ./backend:/app/backend
       - ./dev-start.sh:/app/dev-start.sh
       - ./.env:/app/.env
-      # Prevent container build files from conflicting with host
+      # Prevent container build files from conflicting with host & cache Maven repo
       - /app/frontend/node_modules
       - /app/backend/target
+      - maven-repo:/root/.m2
       - ./uploads:/opt/uploads
     networks:
       - wjl-network
     command: /app/dev-start.sh
     entrypoint: ["/bin/bash", "-c", "cp /app/dev-start.sh /tmp/dev-start.sh && sed -i 's/\\r$$//' /tmp/dev-start.sh && chmod +x /tmp/dev-start.sh && /tmp/dev-start.sh"]
+
 networks:
   wjl-network:
     name: wjl-network
     driver: bridge
+
+volumes:
+  maven-repo:
