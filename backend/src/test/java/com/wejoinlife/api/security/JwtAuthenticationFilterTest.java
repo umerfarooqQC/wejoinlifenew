@@ -117,4 +117,15 @@ class JwtAuthenticationFilterTest {
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         verifyNoInteractions(userDetailsService);
     }
+
+    @Test
+    void testShouldNotFilterOnLogin() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/wjlapi/v1/auth/login");
+        assertTrue(filter.shouldNotFilter(request));
+
+        request.setRequestURI("/wjlapi/v1/auth/me");
+        assertFalse(filter.shouldNotFilter(request));
+    }
 }
+

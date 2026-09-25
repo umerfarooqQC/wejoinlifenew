@@ -59,15 +59,8 @@ public class AuthRepository {
         if (clientUuid == null || clientUuid.isBlank()) {
             return List.of();
         }
-        String sql = "SELECT DISTINCT site_id FROM (" +
-                     "  SELECT s.site_id FROM " + vconnectDb + ".sellers s WHERE s.client_uuid = :clientUuid AND s.site_id IS NOT NULL AND s.site_id > 0 " +
-                     "  UNION " +
-                     "  SELECT st.id AS site_id FROM " + portalDb + ".sites st JOIN " + vconnectDb + ".sellers s ON s.id = st.seller_id WHERE s.client_uuid = :clientUuid " +
-                     "  UNION " +
-                     "  SELECT s.site_id FROM " + portalDb + ".clients_sellers cs JOIN " + vconnectDb + ".sellers s ON s.id = cs.seller_id WHERE cs.client_uuid = :clientUuid AND s.site_id IS NOT NULL AND s.site_id > 0 " +
-                     "  UNION " +
-                     "  SELECT st.id AS site_id FROM " + portalDb + ".clients_sellers cs JOIN " + portalDb + ".sites st ON st.seller_id = cs.seller_id WHERE cs.client_uuid = :clientUuid " +
-                     ") t WHERE site_id IS NOT NULL ORDER BY site_id";
+        String sql = "SELECT DISTINCT site_id FROM " + vconnectDb + ".sellers s " +
+                     "WHERE s.client_uuid = :clientUuid AND s.site_id IS NOT NULL ORDER BY site_id";
         return jdbcClient.sql(sql)
                 .param("clientUuid", clientUuid)
                 .query(Integer.class)
@@ -78,33 +71,6 @@ public class AuthRepository {
         String sql = "UPDATE " + portalDb + ".clients SET last_login_on = NOW() WHERE id = :id";
         jdbcClient.sql(sql)
                 .param("id", clientId)
-                .update();
-    }
-
-    public Optional<String> findActiveCartSession(String clientId) {
-        String sql = "SELECT c.session_id " +
-                     "FROM " + portalDb + ".cart c " +
-                     "INNER JOIN " + portalDb + ".cart_items ci ON c.id = ci.cart_id " +
-                     "WHERE c.client_id = :clientId " +
-                     "LIMIT 1";
-        return jdbcClient.sql(sql)
-                .param("clientId", clientId)
-                .query(String.class)
-                .optional();
-    }
-
-    public void deleteEmptyCarts(String clientId) {
-        String sql = "DELETE FROM " + portalDb + ".cart WHERE client_id = :clientId AND id NOT IN (SELECT cart_id FROM " + portalDb + ".cart_items)";
-        jdbcClient.sql(sql)
-                .param("clientId", clientId)
-                .update();
-    }
-
-    public void assignGuestCartToClient(String clientId, String guestSessionId) {
-        String sql = "UPDATE " + portalDb + ".cart SET client_id = :clientId WHERE session_id = :sessionId";
-        jdbcClient.sql(sql)
-                .param("clientId", clientId)
-                .param("sessionId", guestSessionId)
                 .update();
     }
 

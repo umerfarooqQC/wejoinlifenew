@@ -33,9 +33,6 @@ application:
     catalog-db: ${CATALOG_DB:vconnect_prod_catalog}
     vconnect-db: ${VCONNECT_DB:vconnect}
 
-  cart:
-    cookie-name: ${CART_COOKIE_NAME:vconnect_cart}
-
   async:
     core-pool-size: ${ASYNC_CORE_POOL_SIZE:10}
     max-pool-size: ${ASYNC_MAX_POOL_SIZE:50}

@@ -42,7 +42,6 @@ class AuthControllerTest {
         SecurityContextHolder.clearContext();
         authController = new AuthController(authService, jwtService);
         ReflectionTestUtils.setField(authController, "jwtCookieName", "wjl_jwt");
-        ReflectionTestUtils.setField(authController, "cartCookieName", "vconnect_cart");
     }
 
     @Test

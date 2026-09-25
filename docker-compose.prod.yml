@@ -36,7 +36,6 @@ services:
       - PORTAL_DB=${PORTAL_DB:-vconnect_prod_portal}
       - CATALOG_DB=${CATALOG_DB:-vconnect_prod_catalog}
       - VCONNECT_DB=${VCONNECT_DB:-vconnect}
-      - CART_COOKIE_NAME=${CART_COOKIE_NAME:-vconnect_cart}
 
       - NODE_ENV=production
     volumes:
