@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react
 import { useAuth } from '../lib/useAuth';
 import { getAccessToken } from '../lib/authStore';
 import { apiClient } from '../lib/api';
+import RestaurantOnboarding from './components/restaurant/RestaurantOnboarding';
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -27,6 +28,12 @@ function Navbar() {
           className={`nav-link-btn ${location.pathname === '/seller' ? 'active' : ''}`}
         >
           🛍️ Seller Portal
+        </Link>
+        <Link 
+          to="/restaurant" 
+          className={`nav-link-btn ${location.pathname === '/restaurant' ? 'active' : ''}`}
+        >
+          🍽️ Restaurant Setup
         </Link>
         <Link 
           to="/profile" 
@@ -213,6 +220,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardView />} />
+        <Route path="/restaurant" element={<RestaurantOnboarding />} />
         <Route path="/seller" element={<SellerView />} />
         <Route path="/profile" element={<ProfileView />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

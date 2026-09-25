@@ -6,28 +6,38 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:8080
+        - VITE_API_URL=${VITE_API_URL:-}
     container_name: wejoinlife-dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "3000:3000"   # React Frontend (Vite Dev Server)
       - "8080:8080"   # Spring Boot Backend API
     environment:
-      - DB_HOST=host.docker.internal
-      - DB_PORT=3306
-      - DB_NAME=vconnect_prod_portal
-      - DB_USERNAME=${DB_USERNAME:-devdb}
-      - DB_PASSWORD=${DB_PASSWORD:-}
-      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-      - CLIENT_PASS_SALT=38fc4120
-      - PORTAL_DB=vconnect_prod_portal
-      - CATALOG_DB=vconnect_prod_catalog
-      - VCONNECT_DB=vconnect
+      # Database Configuration
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-vconnect_prod_portal}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://${DB_HOST:-host.docker.internal}:${DB_PORT:-3306}/${DB_NAME:-vconnect_prod_portal}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      # Security & JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - JWT_COOKIE_DOMAIN=${JWT_COOKIE_DOMAIN:-}
+      - JWT_COOKIE_NAME=${JWT_COOKIE_NAME:-wjl_jwt}
+      - CLIENT_PASS_SALT=${CLIENT_PASS_SALT:-38fc4120}
+      # Multi-Database Mapping
+      - PORTAL_DB=${PORTAL_DB:-vconnect_prod_portal}
+      - CATALOG_DB=${CATALOG_DB:-vconnect_prod_catalog}
+      - VCONNECT_DB=${VCONNECT_DB:-vconnect}
+      - CART_COOKIE_NAME=${CART_COOKIE_NAME:-vconnect_cart}
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true # File change detection on Windows mounts
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
-      # Sync source code folders for live editing
+      # Sync source code folders for live dev editing
       - ./frontend:/app/frontend
       - ./backend:/app/backend
       - ./dev-start.sh:/app/dev-start.sh
@@ -36,9 +46,12 @@ services:
       - /app/frontend/node_modules
       - /app/backend/target
       - ./uploads:/opt/uploads
+    networks:
+      - wjl-network
     command: /app/dev-start.sh
     entrypoint: ["/bin/bash", "-c", "cp /app/dev-start.sh /tmp/dev-start.sh && sed -i 's/\\r$$//' /tmp/dev-start.sh && chmod +x /tmp/dev-start.sh && /tmp/dev-start.sh"]
 
 networks:
-  default:
-    name: wjl-dev-network
+  wjl-network:
+    name: wjl-network
+    driver: bridge

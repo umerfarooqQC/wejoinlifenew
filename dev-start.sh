@@ -7,6 +7,7 @@ echo "=================================================="
 # Start Backend in watch / dev mode
 echo "Starting Spring Boot Backend (Development Mode)..."
 cd /app/backend
+chmod +x ./mvnw
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev &
 
 # Start Frontend with Vite Hot Module Replacement (HMR)
