@@ -11,11 +11,21 @@ import { Step9StoreReady } from './Step9StoreReady';
 import { Step10LiveStoreDashboard } from './Step10LiveStoreDashboard';
 import './OnboardingSteps.css';
 
+export interface OnboardingFormData {
+  shopName: string;
+  description: string;
+  location: any;
+  hours: any[];
+  deliveryMethods: any;
+  paymentMethods: any;
+  combos: any[];
+}
+
 export const OnboardingFlowManager: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   // Stored data across step transitions
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<OnboardingFormData>({
     shopName: 'Bella Italia Bistro',
     description:
       'Serving authentic Neapolitan pizza baked in our traditional stone oven, fresh handmade pasta, crisp garden salads, and Italian desserts crafted with passion.',
